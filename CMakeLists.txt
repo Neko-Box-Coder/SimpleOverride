@@ -24,7 +24,11 @@ target_sources(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/FunctionOverr
 if(SIMPLE_OVERRIDE_BUILD_TEST)
     add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/FunctionOverridesTests.cpp")
     target_link_libraries(SimpleOverrideTest PUBLIC SimpleOverride)
-    add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/External/ssTest" "${CMAKE_CURRENT_BINARY_DIR}/ssTest")
+    
+    if(NOT TARGET ssTest)
+        add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/External/ssTest" "${CMAKE_CURRENT_BINARY_DIR}/ssTest")
+    endif()
+
     target_link_libraries(SimpleOverrideTest PUBLIC ssTest)
 endif()
 
