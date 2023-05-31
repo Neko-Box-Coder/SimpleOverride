@@ -823,7 +823,7 @@ namespace SimpleOverride
                     return returnValue;\
             } while(0)
             
-            #define FO_DECLARE_INSTNACE(functionOverrideName) SimpleOverride::FunctionOverrides functionOverrideName;
+            #define FO_DECLARE_INSTNACE(functionOverrideName) mutable SimpleOverride::FunctionOverrides functionOverrideName
             
             #define FO_DECLARE_OVERRIDE_METHODS(functionOverrideName)\
             template<typename FUNC_SIG>\
