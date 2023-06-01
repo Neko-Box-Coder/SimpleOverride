@@ -36,13 +36,31 @@ namespace SimpleOverride
     
     struct Any
     {
+        inline bool operator== (Any& other)
+        {
+            return true;
+        }
+        
+        inline bool operator!= (Any& other)
+        {
+            return false;
+        }
+    
         friend std::ostream& operator<<(std::ostream& os, const Any& other)
         {
             os << "Any";
             return os;
         }
     } const ANY;
+
+    template<typename T>
+    struct AnyWithVar : public Any
+    {
+        T* ReferenceVar = nullptr;
     
+        AnyWithVar(){}
+        AnyWithVar(T& referenceVar) { ReferenceVar = &referenceVar; }
+    };
     
     //==============================================================================
     //Method Chaining Classes
@@ -437,7 +455,10 @@ namespace SimpleOverride
                 AppendArgumentsDereference(argumentsList, args...);
             }
             
-            template<typename T, typename... Args>
+            template<   typename T, 
+                        typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
+                        typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
+                        typename... Args>
             inline void AppendArgumentsDereference(std::vector<ArgInfo>& argumentsList, T* arg, Args&... args)
             {
                 AppendArgumentsDereference(argumentsList, *arg, args...);
@@ -468,7 +489,10 @@ namespace SimpleOverride
                 return CheckArguments(argumentsListToCheck, ++argIndex, args...);
             }
             
-            template<typename T, typename... Args>
+            template<   typename T, 
+                        typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
+                        typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
+                        typename... Args>
             inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, T* arg, Args&... args)
             {
                 return CheckArguments(argumentsListToCheck, argIndex, *arg, args...);
@@ -631,7 +655,10 @@ namespace SimpleOverride
                 ModifyArgs(argumentsList, argsData, ++index, args...);
             }
             
-            template<typename T, typename... Args>
+            template<   typename T, 
+                        typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
+                        typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
+                        typename... Args>
             inline void ModifyArgs(std::vector<ArgInfo>& argumentsList, std::vector<DataInfo>& argsData, int index, T* arg, Args&... args)
             {
                 ModifyArgs(argumentsList, argsData, index, *arg, args...);
