@@ -54,13 +54,16 @@ namespace SimpleOverride
     } const ANY;
 
     template<typename T>
-    struct AnyWithVar : public Any
+    struct NonCopyable : public Any
     {
         T* ReferenceVar = nullptr;
     
-        AnyWithVar(){}
-        AnyWithVar(T& referenceVar) { ReferenceVar = &referenceVar; }
+        NonCopyable(){}
+        NonCopyable(T& referenceVar) { ReferenceVar = &referenceVar; }
     };
+    
+    template<typename T>
+    using NonComparable = NonCopyable<T>;
     
     //==============================================================================
     //Method Chaining Classes
@@ -195,6 +198,10 @@ namespace SimpleOverride
         //Methods for storing requirements and datas to be returned or set
         //==============================================================================
         private:
+        
+            #define INTERNAL_FO_UNCONST(targetType) typename std::remove_const<targetType>::type
+            #define INTERNAL_FO_PURE_T INTERNAL_FO_UNCONST(T)
+        
             //------------------------------------------------------------------------------
             //Methods for setting return data
             //------------------------------------------------------------------------------
@@ -213,13 +220,13 @@ namespace SimpleOverride
             template<typename T>
             inline FunctionOverridesReturnProxy Returns(FunctionOverridesReturnProxy proxy, T returnData)
             {
-                T* returnDataP = static_cast<T*>(malloc(sizeof(T)));
+                INTERNAL_FO_PURE_T* returnDataP = static_cast<INTERNAL_FO_PURE_T*>(malloc(sizeof(INTERNAL_FO_PURE_T)));
 
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
-                lastData.ReturnDataInfo.Data = new T(returnData);
-                lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
+                lastData.ReturnDataInfo.Data = new INTERNAL_FO_PURE_T(returnData);
+                lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<INTERNAL_FO_PURE_T*>(data); }; 
                 lastData.ReturnDataInfo.DataSet = true;
-                lastData.ReturnDataInfo.DataType = typeid(T).hash_code();
+                lastData.ReturnDataInfo.DataType = typeid(INTERNAL_FO_PURE_T).hash_code();
                 return proxy;
             }
             
@@ -266,10 +273,10 @@ namespace SimpleOverride
                 
                 if(!std::is_same<T, Any>())
                 {
-                    lastData.ArgumentsDataInfo.back().Data = new T(arg);
-                    lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<T*>(data); };
+                    lastData.ArgumentsDataInfo.back().Data = new INTERNAL_FO_PURE_T(arg);
+                    lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<INTERNAL_FO_PURE_T*>(data); };
                     lastData.ArgumentsDataInfo.back().DataSet = true;
-                    lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
+                    lastData.ArgumentsDataInfo.back().DataType = typeid(INTERNAL_FO_PURE_T).hash_code();
 
                     #if 0
                         std::cout << "Set args index: "<<lastData.ArgumentsDataInfo.size() - 1 << std::endl;
@@ -323,10 +330,10 @@ namespace SimpleOverride
                 ArgInfo curArg;
                 if(!std::is_same<T, Any>())
                 {
-                    curArg.ArgData = new T(arg);
-                    curArg.Destructor = [](void* data){ delete static_cast<T*>(data); };
-                    curArg.ArgSize = sizeof(T);
-                    curArg.ArgTypeHash = typeid(T).hash_code();
+                    curArg.ArgData = new INTERNAL_FO_PURE_T(arg);
+                    curArg.Destructor = [](void* data){ delete static_cast<INTERNAL_FO_PURE_T*>(data); };
+                    curArg.ArgSize = sizeof(INTERNAL_FO_PURE_T);
+                    curArg.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
                     curArg.ArgSet = true;
                 }
 
@@ -429,10 +436,10 @@ namespace SimpleOverride
             inline void AppendArguments(std::vector<ArgInfo>& argumentsList, T arg, Args... args)
             {
                 ArgInfo curArgInfo;
-                curArgInfo.ArgData = new T(arg);
-                curArgInfo.Destructor = [](void* data){ delete static_cast<T*>(data); };
-                curArgInfo.ArgSize = sizeof(T);
-                curArgInfo.ArgTypeHash = typeid(T).hash_code();
+                curArgInfo.ArgData = new INTERNAL_FO_PURE_T(arg);
+                curArgInfo.Destructor = [](void* data){ delete static_cast<INTERNAL_FO_PURE_T*>(data); };
+                curArgInfo.ArgSize = sizeof(INTERNAL_FO_PURE_T);
+                curArgInfo.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
                 curArgInfo.ArgSet = true;
                 
                 argumentsList.push_back(curArgInfo);
@@ -445,10 +452,10 @@ namespace SimpleOverride
             inline void AppendArgumentsDereference(std::vector<ArgInfo>& argumentsList, T& arg, Args&... args)
             {
                 ArgInfo curArgInfo;
-                curArgInfo.ArgData = new T(arg);
-                curArgInfo.Destructor = [](void* data){ delete static_cast<T*>(data); };
-                curArgInfo.ArgSize = sizeof(T);
-                curArgInfo.ArgTypeHash = typeid(T).hash_code();
+                curArgInfo.ArgData = new INTERNAL_FO_PURE_T(arg);
+                curArgInfo.Destructor = [](void* data){ delete static_cast<INTERNAL_FO_PURE_T*>(data); };
+                curArgInfo.ArgSize = sizeof(INTERNAL_FO_PURE_T);
+                curArgInfo.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
                 curArgInfo.ArgSet = true;
                 
                 argumentsList.push_back(curArgInfo);
@@ -463,26 +470,24 @@ namespace SimpleOverride
             {
                 AppendArgumentsDereference(argumentsList, *arg, args...);
             }
-            
-            
-            
+
             inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex){ return true; };
 
             template<typename T, typename... Args>
-            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, T arg, Args&... args)
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, T& arg, Args&... args)
             {
                 if(argIndex >= argumentsListToCheck.size())
                     return false;
 
                 if(argumentsListToCheck[argIndex].ArgSet)
                 {
-                    if(sizeof(T) != argumentsListToCheck[argIndex].ArgSize)
+                    if(sizeof(INTERNAL_FO_PURE_T) != argumentsListToCheck[argIndex].ArgSize)
                         return false;
                         
-                    if(typeid(T).hash_code() != argumentsListToCheck[argIndex].ArgTypeHash)
+                    if(typeid(INTERNAL_FO_PURE_T).hash_code() != argumentsListToCheck[argIndex].ArgTypeHash)
                         return false;
 
-                    if(arg != *reinterpret_cast<T*>(argumentsListToCheck[argIndex].ArgData))
+                    if(arg != *reinterpret_cast<INTERNAL_FO_PURE_T*>(argumentsListToCheck[argIndex].ArgData))
                         return false;
                 }            
                 
@@ -521,7 +526,7 @@ namespace SimpleOverride
                         continue;
                 
                     //Check return type
-                    if(curReturnDatas[i].ReturnDataInfo.DataType != typeid(T).hash_code())
+                    if(curReturnDatas[i].ReturnDataInfo.DataType != typeid(INTERNAL_FO_PURE_T).hash_code())
                         continue;
 
                     //Check condition
