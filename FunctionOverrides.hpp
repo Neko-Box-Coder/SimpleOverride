@@ -1,5 +1,5 @@
-#ifndef SIMPLE_OVERRIDE_FUNCTION_OVERRIDES_H
-#define SIMPLE_OVERRIDE_FUNCTION_OVERRIDES_H
+#ifndef SIMPLE_OVERRIDE_FUNCTION_OVERRIDES_HPP
+#define SIMPLE_OVERRIDE_FUNCTION_OVERRIDES_HPP
 
 #include <cassert>
 #include <functional>
@@ -52,7 +52,7 @@ namespace SimpleOverride
             return os;
         }
     } const ANY;
-
+    
     template<typename T>
     struct NonCopyable : public Any
     {
@@ -220,13 +220,13 @@ namespace SimpleOverride
             template<typename T>
             inline FunctionOverridesReturnProxy Returns(FunctionOverridesReturnProxy proxy, T returnData)
             {
-                INTERNAL_FO_PURE_T* returnDataP = static_cast<INTERNAL_FO_PURE_T*>(malloc(sizeof(INTERNAL_FO_PURE_T)));
+                T* returnDataP = static_cast<T*>(malloc(sizeof(T)));
 
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
-                lastData.ReturnDataInfo.Data = new INTERNAL_FO_PURE_T(returnData);
-                lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<INTERNAL_FO_PURE_T*>(data); }; 
+                lastData.ReturnDataInfo.Data = new T(returnData);
+                lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
                 lastData.ReturnDataInfo.DataSet = true;
-                lastData.ReturnDataInfo.DataType = typeid(INTERNAL_FO_PURE_T).hash_code();
+                lastData.ReturnDataInfo.DataType = typeid(T).hash_code();
                 return proxy;
             }
             
@@ -273,10 +273,10 @@ namespace SimpleOverride
                 
                 if(!std::is_same<T, Any>())
                 {
-                    lastData.ArgumentsDataInfo.back().Data = new INTERNAL_FO_PURE_T(arg);
-                    lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<INTERNAL_FO_PURE_T*>(data); };
+                    lastData.ArgumentsDataInfo.back().Data = new T(arg);
+                    lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<T*>(data); };
                     lastData.ArgumentsDataInfo.back().DataSet = true;
-                    lastData.ArgumentsDataInfo.back().DataType = typeid(INTERNAL_FO_PURE_T).hash_code();
+                    lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
 
                     #if 0
                         std::cout << "Set args index: "<<lastData.ArgumentsDataInfo.size() - 1 << std::endl;
@@ -330,10 +330,10 @@ namespace SimpleOverride
                 ArgInfo curArg;
                 if(!std::is_same<T, Any>())
                 {
-                    curArg.ArgData = new INTERNAL_FO_PURE_T(arg);
-                    curArg.Destructor = [](void* data){ delete static_cast<INTERNAL_FO_PURE_T*>(data); };
-                    curArg.ArgSize = sizeof(INTERNAL_FO_PURE_T);
-                    curArg.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
+                    curArg.ArgData = new T(arg);
+                    curArg.Destructor = [](void* data){ delete static_cast<T*>(data); };
+                    curArg.ArgSize = sizeof(T);
+                    curArg.ArgTypeHash = typeid(T).hash_code();
                     curArg.ArgSet = true;
                 }
 
@@ -436,10 +436,10 @@ namespace SimpleOverride
             inline void AppendArguments(std::vector<ArgInfo>& argumentsList, T arg, Args... args)
             {
                 ArgInfo curArgInfo;
-                curArgInfo.ArgData = new INTERNAL_FO_PURE_T(arg);
-                curArgInfo.Destructor = [](void* data){ delete static_cast<INTERNAL_FO_PURE_T*>(data); };
-                curArgInfo.ArgSize = sizeof(INTERNAL_FO_PURE_T);
-                curArgInfo.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
+                curArgInfo.ArgData = new T(arg);
+                curArgInfo.Destructor = [](void* data){ delete static_cast<T*>(data); };
+                curArgInfo.ArgSize = sizeof(T);
+                curArgInfo.ArgTypeHash = typeid(T).hash_code();
                 curArgInfo.ArgSet = true;
                 
                 argumentsList.push_back(curArgInfo);
@@ -639,8 +639,8 @@ namespace SimpleOverride
             
                 if(argsData[index].DataSet)
                 {
-                    arg = *static_cast<T*>(argsData[index].Data);
-                    
+                    INTERNAL_FO_PURE_T& pureArg = const_cast<INTERNAL_FO_PURE_T&>(arg); 
+                    pureArg = *static_cast<INTERNAL_FO_PURE_T*>(argsData[index].Data);
                     #if 0
                         std::cout << "modified index: "<<index << std::endl;
                         std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
@@ -655,7 +655,7 @@ namespace SimpleOverride
                     #endif
                 }
                 else
-                    argsData[index].DataAction(argumentsList, &arg);
+                    argsData[index].DataAction(argumentsList, &const_cast<INTERNAL_FO_PURE_T&>(arg));
 
                 ModifyArgs(argumentsList, argsData, ++index, args...);
             }
@@ -721,22 +721,22 @@ namespace SimpleOverride
             //Overrding Returns
             //------------------------------------------------------------------------------
             template<typename FUNC_SIG>
-            inline FunctionOverridesReturnProxy OverrideReturns(FUNC_SIG functionSignature)
+            inline FunctionOverridesReturnProxy OverrideReturns(FUNC_SIG functionName)
             {
-                std::string functionSignatureString = typeid(FUNC_SIG).name();
+                std::string functionNameString = typeid(FUNC_SIG).name();
 
-                OverrideReturnInfos[functionSignatureString].ReturnDatas.push_back(ReturnData());
-                return FunctionOverridesReturnProxy(functionSignatureString, *this, ProxyType::RETURN);
+                OverrideReturnInfos[functionNameString].ReturnDatas.push_back(ReturnData());
+                return FunctionOverridesReturnProxy(functionNameString, *this, ProxyType::RETURN);
             }
             
             template<typename T, typename FUNC_SIG, typename... Args>
-            inline bool CheckOverrideAndReturn(T& returnRef, FUNC_SIG functionSignature, Args&... args)
+            inline bool CheckOverrideAndReturn(T& returnRef, FUNC_SIG functionName, Args&... args)
             {
-                std::string functionSignatureString = typeid(FUNC_SIG).name();
-                if(OverrideReturnInfos.find(functionSignatureString) == OverrideReturnInfos.end())
+                std::string functionNameString = typeid(FUNC_SIG).name();
+                if(OverrideReturnInfos.find(functionNameString) == OverrideReturnInfos.end())
                     return false;
             
-                int correctDataIndex = GetCorrectReturnDataInfo(returnRef, functionSignature, args...);
+                int correctDataIndex = GetCorrectReturnDataInfo(returnRef, functionName, args...);
                 
                 std::vector<ArgInfo> argumentsList;
                 AppendArguments(argumentsList, args...);
@@ -745,11 +745,11 @@ namespace SimpleOverride
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    ReturnData& correctData = OverrideReturnInfos[functionSignatureString].ReturnDatas[correctDataIndex];
+                    ReturnData& correctData = OverrideReturnInfos[functionNameString].ReturnDatas[correctDataIndex];
                     correctData.ReturnConditionInfo.CalledTimes++;
                     
-                    if(OverrideReturnInfos[functionSignatureString].OverrideReturnInfo.CalledActionSet)
-                        OverrideReturnInfos[functionSignatureString].OverrideReturnInfo.CalledAction(argumentsList);
+                    if(OverrideReturnInfos[functionNameString].OverrideReturnInfo.CalledActionSet)
+                        OverrideReturnInfos[functionNameString].OverrideReturnInfo.CalledAction(argumentsList);
                     
                     if(correctData.ReturnDataInfo.DataSet)
                         returnRef = *reinterpret_cast<T*>(correctData.ReturnDataInfo.Data);
@@ -762,8 +762,8 @@ namespace SimpleOverride
                 else
                 {
                     //Otherwise action
-                    if(OverrideReturnInfos[functionSignatureString].OverrideReturnInfo.OtherwiseActionSet)
-                        OverrideReturnInfos[functionSignatureString].OverrideReturnInfo.OtherwiseAction(argumentsList);
+                    if(OverrideReturnInfos[functionNameString].OverrideReturnInfo.OtherwiseActionSet)
+                        OverrideReturnInfos[functionNameString].OverrideReturnInfo.OtherwiseAction(argumentsList);
                     
                     returnResult = false;
                 }
@@ -775,19 +775,19 @@ namespace SimpleOverride
                 return returnResult;
             }
             
-            #define FO_RETURN_IF_FOUND_WITHOUT_ARGS(functionOverrideObj, funcSignature, returnType)\
+            #define FO_RETURN_IF_FOUND_WITHOUT_ARGS(functionOverrideObj, functionRef, returnType)\
             do\
             {\
                 returnType returnVal;\
-                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, funcSignature))\
+                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, functionRef))\
                     return returnVal;\
             } while(0)
             
-            #define FO_RETURN_IF_FOUND(functionOverrideObj, funcSignature, returnType, ...)\
+            #define FO_RETURN_IF_FOUND(functionOverrideObj, functionRef, returnType, ...)\
             do\
             {\
                 returnType returnVal;\
-                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, funcSignature, __VA_ARGS__))\
+                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, functionRef, __VA_ARGS__))\
                     return returnVal;\
             } while(0)
 
@@ -796,22 +796,22 @@ namespace SimpleOverride
             //Overrding Arguments
             //------------------------------------------------------------------------------
             template<typename FUNC_SIG>
-            inline FunctionOverridesArgumentsProxy OverrideArgs(FUNC_SIG functionSignature)
+            inline FunctionOverridesArgumentsProxy OverrideArgs(FUNC_SIG functionName)
             {
-                std::string functionSignatureString = typeid(FUNC_SIG).name();
+                std::string functionNameString = typeid(FUNC_SIG).name();
 
-                OverrideArgumentsInfos[functionSignatureString].ArgumentsDatas.push_back(ArgumentsData());
-                return FunctionOverridesArgumentsProxy(functionSignatureString, *this, ProxyType::ARGS);
+                OverrideArgumentsInfos[functionNameString].ArgumentsDatas.push_back(ArgumentsData());
+                return FunctionOverridesArgumentsProxy(functionNameString, *this, ProxyType::ARGS);
             }
 
             template<typename FUNC_SIG, typename... Args>
-            inline bool CheckOverrideAndSetArgs(FUNC_SIG functionSignature, Args&... args)
+            inline bool CheckOverrideAndSetArgs(FUNC_SIG functionName, Args&... args)
             {
-                std::string functionSignatureString = typeid(FUNC_SIG).name();
-                if(OverrideArgumentsInfos.find(functionSignatureString) == OverrideArgumentsInfos.end())
+                std::string functionNameString = typeid(FUNC_SIG).name();
+                if(OverrideArgumentsInfos.find(functionNameString) == OverrideArgumentsInfos.end())
                     return false;
             
-                int correctDataIndex = GetCorrectArgumentsDataInfo(functionSignature, args...);
+                int correctDataIndex = GetCorrectArgumentsDataInfo(functionName, args...);
                 
                 std::vector<ArgInfo> argumentsList;
                 AppendArguments(argumentsList, args...);
@@ -820,11 +820,11 @@ namespace SimpleOverride
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    ArgumentsData& correctData = OverrideArgumentsInfos[functionSignatureString].ArgumentsDatas[correctDataIndex];
+                    ArgumentsData& correctData = OverrideArgumentsInfos[functionNameString].ArgumentsDatas[correctDataIndex];
                     correctData.ArgumentsConditionInfo.CalledTimes++;
                     
-                    if(OverrideArgumentsInfos[functionSignatureString].OverrideArgumentsInfo.CalledActionSet)
-                        OverrideArgumentsInfos[functionSignatureString].OverrideArgumentsInfo.CalledAction(argumentsList);
+                    if(OverrideArgumentsInfos[functionNameString].OverrideArgumentsInfo.CalledActionSet)
+                        OverrideArgumentsInfos[functionNameString].OverrideArgumentsInfo.CalledAction(argumentsList);
 
                     ModifyArgs(argumentsList, correctData.ArgumentsDataInfo, 0, args...);
                     returnResult = true;
@@ -832,8 +832,8 @@ namespace SimpleOverride
                 else
                 {
                     //Otherwise action
-                    if(OverrideArgumentsInfos[functionSignatureString].OverrideArgumentsInfo.OtherwiseActionSet)
-                        OverrideArgumentsInfos[functionSignatureString].OverrideArgumentsInfo.OtherwiseAction(argumentsList);
+                    if(OverrideArgumentsInfos[functionNameString].OverrideArgumentsInfo.OtherwiseActionSet)
+                        OverrideArgumentsInfos[functionNameString].OverrideArgumentsInfo.OtherwiseAction(argumentsList);
 
                     returnResult = false;
                 }
@@ -845,28 +845,28 @@ namespace SimpleOverride
                 return returnResult;
             }
             
-            #define FO_ARGUMENTS_IF_FOUND(functionOverrideObj, funcSignature, ...)\
-            functionOverrideObj.CheckOverrideAndSetArgs(funcSignature, __VA_ARGS__)
+            #define FO_ARGUMENTS_IF_FOUND(functionOverrideObj, functionRef, ...)\
+            functionOverrideObj.CheckOverrideAndSetArgs(functionRef, __VA_ARGS__)
             
-            #define FO_ARGUMENTS_AND_RETURN_IF_FOUND(returnValue, functionOverrideObj, funcSignature, ...)\
+            #define FO_ARGUMENTS_AND_RETURN_IF_FOUND(returnValue, functionOverrideObj, functionRef, ...)\
             do\
             {\
-                if(functionOverrideObj.CheckOverrideAndSetArgs(funcSignature, __VA_ARGS__))\
+                if(functionOverrideObj.CheckOverrideAndSetArgs(functionRef, __VA_ARGS__))\
                     return returnValue;\
             } while(0)
             
-            #define FO_DECLARE_INSTNACE(functionOverrideName) mutable SimpleOverride::FunctionOverrides functionOverrideName
+            #define FO_DECLARE_INSTNACE(OverrideObjName) mutable SimpleOverride::FunctionOverrides OverrideObjName
             
-            #define FO_DECLARE_OVERRIDE_METHODS(functionOverrideName)\
+            #define FO_DECLARE_OVERRIDE_METHODS(OverrideObjName)\
             template<typename FUNC_SIG>\
-            inline SimpleOverride::FunctionOverridesArgumentsProxy OverrideArgs(FUNC_SIG functionSignature)\
+            inline SimpleOverride::FunctionOverridesArgumentsProxy OverrideArgs(FUNC_SIG functionName)\
             {\
-                return functionOverrideName.OverrideArgs(functionSignature);\
+                return OverrideObjName.OverrideArgs(functionName);\
             }\
             template<typename FUNC_SIG>\
-            inline SimpleOverride::FunctionOverridesReturnProxy OverrideReturns(FUNC_SIG functionSignature)\
+            inline SimpleOverride::FunctionOverridesReturnProxy OverrideReturns(FUNC_SIG functionName)\
             {\
-                return functionOverrideName.OverrideReturns(functionSignature);\
+                return OverrideObjName.OverrideReturns(functionName);\
             }
     };
     
@@ -927,5 +927,15 @@ namespace SimpleOverride
         return FunctionOverridesObj.WhenCalledExpectedly_Do(*this, action);
     }
 }
+
+const SimpleOverride::Any FO_ANY;
+const SimpleOverride::Any FO_DONT_SET;
+
+template<typename T>
+using FO_NonCopyable = SimpleOverride::NonCopyable<T>;
+    
+template<typename T>
+using FO_NonComparable = SimpleOverride::NonComparable<T>;
+
 
 #endif

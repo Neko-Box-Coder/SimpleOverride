@@ -1,27 +1,48 @@
 #include "FunctionOverrides.hpp"
 #include "ssTest.hpp"
 
-namespace {
+namespace 
+{
     SimpleOverride::FunctionOverrides OverrideObj;
 }
 
 
 int TestFuncWithoutArgs()
 {
-    FO_RETURN_IF_FOUND_WITHOUT_ARGS(OverrideObj, TestFuncWithoutArgs, int);
+    FO_RETURN_IF_FOUND_WITHOUT_ARGS(OverrideObj, &TestFuncWithoutArgs, int);
     return -1;
 }
 
 int TestFuncWithArgs(int testArg, bool testArg2, float testArg3)
 {
-    FO_RETURN_IF_FOUND(OverrideObj, TestFuncWithArgs, int, testArg, testArg2, testArg3);
+    FO_RETURN_IF_FOUND(OverrideObj, &TestFuncWithArgs, int, testArg, testArg2, testArg3);
     return -1;
+}
+
+int TestFuncWithConstArgs(const int testArg, const bool testArg2, float testArg3)
+{
+    FO_RETURN_IF_FOUND(OverrideObj, &TestFuncWithArgs, int, testArg, testArg2, testArg3);
+    return -1;
+}
+
+void* TestFuncWIthVoidPointer(int testArg, void* testArg2)
+{
+    FO_RETURN_IF_FOUND(OverrideObj, &TestFuncWIthVoidPointer, void*, testArg, testArg2);
+    return nullptr;
 }
 
 void TestFuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
 {
-    FO_ARGUMENTS_IF_FOUND(OverrideObj, TestFuncWithArgsToSet, testArg, testArg2, testArg3);
+    FO_ARGUMENTS_IF_FOUND(OverrideObj, &TestFuncWithArgsToSet, testArg, testArg2, testArg3);
 }
+
+void TestFuncWithConstArgsAndArgsToSet(const int testArg, const float testArg2, std::string& testArg3)
+{
+    FO_ARGUMENTS_IF_FOUND(OverrideObj, &TestFuncWithConstArgsAndArgsToSet, testArg, testArg2, testArg3);
+}
+
+
+
 
 template<typename T>
 class ComplexArg
@@ -51,7 +72,13 @@ class ComplexArg
 
 class ComplexClass
 {
+    private:
+        ComplexClass(const ComplexClass& other) = delete;
+        ComplexClass& operator=(const ComplexClass& other) = delete;
+
     public:
+        ComplexClass() = default;
+
         FO_DECLARE_INSTNACE(CurrentOverrideObj);
         FO_DECLARE_OVERRIDE_METHODS(CurrentOverrideObj);
     
@@ -61,6 +88,14 @@ class ComplexClass
             return -1;
         }
 };
+
+int TestFuncWithNonCopyableArg(int testArg, ComplexClass& nonCopyableArg)
+{
+    auto wrapper = FO_NonCopyable<ComplexClass>(nonCopyableArg);
+    FO_RETURN_IF_FOUND(OverrideObj, &TestFuncWithNonCopyableArg, int, testArg, wrapper);
+    return -1;
+}
+
 
 
 int main()
@@ -106,7 +141,7 @@ int main()
         std::string setString = "setString";
 
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, setFloat, setString);
+                    .SetArgs(FO_DONT_SET, setFloat, setString);
 
         float testFloat = 1.f;
         std::string testString = "";
@@ -120,17 +155,17 @@ int main()
         testString = "";
         
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, setFloat, SimpleOverride::ANY);
+                    .SetArgs(FO_DONT_SET, setFloat, FO_DONT_SET);
         
         TestFuncWithArgsToSet(3, &testFloat, testString);
-        ssTEST_OUTPUT_ASSERT("Any keyword", testFloat == setFloat && testString != setString);
+        ssTEST_OUTPUT_ASSERT("Don't Set", testFloat == setFloat && testString != setString);
         
         ssTEST_CALL_SET_UP();
         testFloat = 1.f;
         testString = "";
         
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY)
+                    .SetArgs(FO_DONT_SET)
                     .SetArgsByAction<float>
                     (
                         [setFloat](std::vector<SimpleOverride::ArgInfo>& args, void* out)
@@ -181,7 +216,7 @@ int main()
                                             TestFuncWithoutArgs() == -1);
 
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, 3.f, std::string("Test"))
+                    .SetArgs(FO_DONT_SET, 3.f, std::string("Test"))
                     .Times(2);
         
         float testFloats[3] = {1.f, 1.f, 1.f};
@@ -230,7 +265,7 @@ int main()
         
         OverrideObj .OverrideReturns(TestFuncWithArgs)
                     .Returns(7)
-                    .WhenCalledWith(4, SimpleOverride::ANY, SimpleOverride::ANY);
+                    .WhenCalledWith(4, FO_ANY, FO_ANY);
         
         ssTEST_OUTPUT_ASSERT("Any", TestFuncWithArgs(4, true, 1.f) == 7 && 
                                     TestFuncWithArgs(4, false, 4.f) == 7 &&
@@ -238,7 +273,7 @@ int main()
         
         
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, 3.f, std::string("Test"))
+                    .SetArgs(FO_ANY, 3.f, std::string("Test"))
                     .WhenCalledWith(1, 2.f, std::string("Called"));
         
         float testFloat = 2.f;
@@ -267,7 +302,7 @@ int main()
         ssTEST_OUTPUT_ASSERT("Non expected args", TestFuncWithArgs(2, true, 3.0f) == -1);
         
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, 3.f, SimpleOverride::ANY)
+                    .SetArgs(FO_DONT_SET, 3.f, FO_DONT_SET)
                     .If
                     (
                         [](std::vector<SimpleOverride::ArgInfo>& args) -> bool
@@ -313,7 +348,7 @@ int main()
         
         calledCorrectly = false;
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, SimpleOverride::ANY, SimpleOverride::ANY)
+                    .SetArgs(FO_DONT_SET, FO_DONT_SET, FO_DONT_SET)
                     .WhenCalledWith(1, 2.f, std::string("Test"))
                     .WhenCalledExpectedly_Do
                     (
@@ -360,7 +395,7 @@ int main()
         calledIncorrectly = false;
         
         OverrideObj .OverrideArgs(TestFuncWithArgsToSet)
-                    .SetArgs(SimpleOverride::ANY, SimpleOverride::ANY, std::string("What?"))
+                    .SetArgs(FO_DONT_SET, FO_DONT_SET, std::string("What?"))
                     .WhenCalledWith(1, 2.f, std::string("Test"))
                     .Otherwise_Do
                     (
@@ -417,10 +452,72 @@ int main()
                             (*static_cast<int*>(out)) = 6;
                         }
                     )
-                    .WhenCalledWith(SimpleOverride::ANY, SimpleOverride::ANY);
+                    .WhenCalledWith(FO_ANY, FO_ANY);
         
         ssTEST_OUTPUT_ASSERT("Return with Action",  testClass.ComplexMemberFunction(callCharComplex, callIntComplex) == 6);
+    }
+    
+    ssTEST("Const Test")
+    {
+        OverrideObj .OverrideReturns(TestFuncWithConstArgs)
+                    .Returns(5)
+                    .WhenCalledWith(1, true, 3.f);
         
+        ssTEST_OUTPUT_ASSERT("Return", TestFuncWithArgs(1, true, 3.f) == 5);
+    
+        const float constFloat = 4.f;
+        OverrideObj .OverrideReturns(TestFuncWithConstArgs)
+                    .Returns(6)
+                    .WhenCalledWith(1, true, constFloat);
+        
+        ssTEST_OUTPUT_ASSERT("Return with const passed in", TestFuncWithArgs(1, true, constFloat) == 6);
+        
+        OverrideObj .OverrideArgs(TestFuncWithConstArgsAndArgsToSet)
+                    .SetArgs(FO_DONT_SET, FO_DONT_SET, std::string("Test"))
+                    .WhenCalledWith(1, 2.f, FO_ANY);
+        
+        std::string testString = "";
+        TestFuncWithConstArgsAndArgsToSet(1, 2.f, testString);
+        
+        ssTEST_OUTPUT_ASSERT("SetArgs", testString == "Test");
+    }
+    
+    ssTEST("Void* Test")
+    {
+        int returnPtr = 1;
+        int testPtr2 = 2;
+        
+        OverrideObj .OverrideReturns(TestFuncWIthVoidPointer)
+                    .Returns((void*)&returnPtr)
+                    .WhenCalledWith(3, (void*)&testPtr2);
+        
+        ssTEST_OUTPUT_ASSERT(TestFuncWIthVoidPointer(3, &testPtr2) == &returnPtr);
+    }
+    
+    ssTEST("NonCopyable NonComparable Test")
+    {
+        ComplexClass testClass;
+        
+        bool correctPtr = false;
+        
+        using NonCopyableWrapper = FO_NonCopyable<ComplexClass>;
+        
+        OverrideObj .OverrideReturns(TestFuncWithNonCopyableArg)
+                    .Returns(1)
+                    .WhenCalledWith(2, FO_ANY)
+                    .WhenCalledExpectedly_Do
+                    (
+                        [&correctPtr, &testClass](std::vector<SimpleOverride::ArgInfo>& args)
+                        {
+                            if( args.size() == 2 && 
+                                static_cast<NonCopyableWrapper*>(args[1].ArgData)->ReferenceVar == &testClass)
+                            {
+                                correctPtr = true;
+                            }
+                        }
+                    );
+        
+        ssTEST_OUTPUT_ASSERT(TestFuncWithNonCopyableArg(2, testClass) == 1 && correctPtr);
     }
 
     ssTEST_END();

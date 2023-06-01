@@ -15,7 +15,8 @@ project(SimpleOverrideProject)
 # ==========================================================
 # Variables 
 # ==========================================================
-set(SIMPLE_OVERRIDE_BUILD_TEST "ON" CACHE BOOL "Build tests for simple override")
+set(SIMPLE_OVERRIDE_BUILD_TEST "OFF" CACHE BOOL "Build tests for simple override")
+set(SIMPLE_OVERRIDE_BUILD_EXAMPLE "ON" CACHE BOOL "Build tests for simple override")
 
 add_library(SimpleOverride INTERFACE)
 target_include_directories(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
@@ -30,5 +31,10 @@ if(SIMPLE_OVERRIDE_BUILD_TEST)
     endif()
 
     target_link_libraries(SimpleOverrideTest PUBLIC ssTest)
+endif()
+
+if(SIMPLE_OVERRIDE_BUILD_EXAMPLE)
+    add_executable(SimpleOverrideExample "${CMAKE_CURRENT_LIST_DIR}/Example.cpp")
+    target_link_libraries(SimpleOverrideExample PUBLIC SimpleOverride)
 endif()
 
