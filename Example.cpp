@@ -24,7 +24,7 @@ void SetArgumentValue(int a, float& b, int* c)
 int main()
 {
     //Example of overriding return value
-    Overrider   .OverrideReturns(ChangeReturnValue)
+    Overrider   .OverrideReturns(ChangeReturnValue(int, float*))
                 .Returns(1)
                 .WhenCalledWith(2, 3.f)     //Pointers are automatically dereferenced when getting compared.
                                             //      Unless it is cast to void*, then it won't be dereferenced.
@@ -38,7 +38,7 @@ int main()
     
     
     //Example of overriding argument value
-    Overrider   .OverrideArgs(SetArgumentValue)
+    Overrider   .OverrideArgs(SetArgumentValue(int, float&, int*))
                 .SetArgs(FO_DONT_SET, 2.f, 3)   //Again, pointers are automatically dereferenced when getting set
                 .WhenCalledWith(4, FO_ANY, FO_ANY);
 
