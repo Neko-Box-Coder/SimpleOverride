@@ -7,16 +7,15 @@ FunctionOverrides Overrider;
 int ChangeReturnValue(int a, float* b)
 {
     //FO_RETURN_IF_FOUND(functionOverrideObj, functionRef, returnType, args...)
-    FO_RETURN_IF_FOUND(Overrider, &ChangeReturnValue, int, a, b);
+    FO_RETURN_IF_FOUND(Overrider, ChangeReturnValue(int, float*), int, a, b);
     
-    //FO_RETURN_IF_FOUND_WITHOUT_ARGS should be used instead if there's no arguments
     return 0;
 }
 
 void SetArgumentValue(int a, float& b, int* c)
 {
     //FO_ARGUMENTS_IF_FOUND(functionOverrideObj, functionRef, args...)
-    FO_ARGUMENTS_IF_FOUND(Overrider, &SetArgumentValue, a, b, c);
+    FO_ARGUMENTS_IF_FOUND(Overrider, SetArgumentValue(int, float&, int*), a, b, c);
     
     //You can also use FO_ARGUMENTS_AND_RETURN_IF_FOUND to return a specify value
     //  When the condition is met
@@ -69,6 +68,7 @@ int main()
     //Similarly, you have "WhenCalledExpectedly_Do" and "Otherwise_Do" clauses for performing custom actions
     //  when the condition is matched or not respectively
     
+    //For usage on these extra actions, see Tests/FunctionOverridesTests.cpp
     
     return 0;
 }

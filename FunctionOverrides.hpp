@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 #include <type_traits>
+#include <set>
 
 namespace SimpleOverride
 {
@@ -54,16 +55,79 @@ namespace SimpleOverride
     } const ANY;
     
     template<typename T>
-    struct NonCopyable : public Any
+    struct NonCopyable
     {
         T* ReferenceVar = nullptr;
     
         NonCopyable(){}
         NonCopyable(T& referenceVar) { ReferenceVar = &referenceVar; }
+        
+        inline bool operator== (NonCopyable<T>& other)
+        {
+            return *ReferenceVar == (*other.ReferenceVar);
+        }
+        
+        inline bool operator!= (NonCopyable& other)
+        {
+            return !operator==(other);
+        }
+    
+        friend std::ostream& operator<<(std::ostream& os, const NonCopyable& other)
+        {
+            os << "NonCopyable";
+            return os;
+        }
     };
     
     template<typename T>
-    using NonComparable = NonCopyable<T>;
+    struct NonComparable
+    {
+        T* ReferenceVar = nullptr;
+    
+        NonComparable(){}
+        NonComparable(T& referenceVar) { ReferenceVar = &referenceVar; }
+        
+        inline bool operator== (NonComparable<T>& other)
+        {
+            return true;
+        }
+        
+        inline bool operator!= (NonComparable& other)
+        {
+            return false;
+        }
+    
+        friend std::ostream& operator<<(std::ostream& os, const NonComparable& other)
+        {
+            os << "NonComparable";
+            return os;
+        }
+    };
+    
+    template<typename T>
+    struct NonComparableCopyable
+    {
+        T* ReferenceVar = nullptr;
+    
+        NonComparableCopyable(){}
+        NonComparableCopyable(T& referenceVar) { ReferenceVar = &referenceVar; }
+        
+        inline bool operator== (NonComparableCopyable<T>& other)
+        {
+            return true;
+        }
+        
+        inline bool operator!= (NonComparableCopyable& other)
+        {
+            return false;
+        }
+    
+        friend std::ostream& operator<<(std::ostream& os, const NonComparableCopyable& other)
+        {
+            os << "NonComparableCopyable";
+            return os;
+        }
+    };
     
     //==============================================================================
     //Method Chaining Classes
@@ -90,11 +154,11 @@ namespace SimpleOverride
             template<typename... Args>
             FunctionOverridesCommonProxy WhenCalledWith(Args... args);
             
-            FunctionOverridesCommonProxy If(std::function<bool(std::vector<ArgInfo>& args)> condition);
+            FunctionOverridesCommonProxy If(std::function<bool(std::vector<void*>& args)> condition);
 
-            FunctionOverridesCommonProxy Otherwise_Do(std::function<void(std::vector<ArgInfo>& args)> action);
+            FunctionOverridesCommonProxy Otherwise_Do(std::function<void(std::vector<void*>& args)> action);
 
-            FunctionOverridesCommonProxy WhenCalledExpectedly_Do(std::function<void(std::vector<ArgInfo>& args)> action);
+            FunctionOverridesCommonProxy WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action);
     };
     
     //Override return proxy class for method chaining
@@ -106,7 +170,7 @@ namespace SimpleOverride
             {}
             
             template<typename T>
-            FunctionOverridesReturnProxy ReturnsByAction(std::function<void(std::vector<ArgInfo>& args, void* out)> returnAction);
+            FunctionOverridesReturnProxy ReturnsByAction(std::function<void(std::vector<void*>& args, void* out)> returnAction);
             
             template<typename T>
             FunctionOverridesReturnProxy Returns(T returnData);
@@ -121,7 +185,7 @@ namespace SimpleOverride
             {}
             
             template<typename T>
-            FunctionOverridesArgumentsProxy SetArgsByAction(std::function<void(std::vector<ArgInfo>& args, void* out)> setArgsAction);
+            FunctionOverridesArgumentsProxy SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction);
             
             template<typename... Args>
             FunctionOverridesArgumentsProxy SetArgs(Args... args);
@@ -145,14 +209,14 @@ namespace SimpleOverride
                 std::size_t DataType = 0;
                 void* Data = nullptr;
                 std::function<void(void*)> Destructor;
-                std::function<void(std::vector<ArgInfo>& args, void* out)> DataAction;
+                std::function<void(std::vector<void*>& args, void* out)> DataAction;
                 bool DataSet = false;
                 bool DataActionSet = false;
             };
 
             struct ConditionInfo
             {
-                std::function<bool(std::vector<ArgInfo>& args)> DataCondition;
+                std::function<bool(std::vector<void*>& args)> DataCondition;
                 std::vector<ArgInfo> ArgsCondition = {};
                 int Times = -1;
                 int CalledTimes = 0;
@@ -161,10 +225,10 @@ namespace SimpleOverride
 
             struct ActionInfo
             {
-                std::function<void(std::vector<ArgInfo>& args)> OtherwiseAction;
-                std::function<void(std::vector<ArgInfo>&)> CalledAction;
+                std::function<void(std::vector<void*>& args)> OtherwiseAction;
+                std::function<void(std::vector<void*>&)> CorrectAction;
                 bool OtherwiseActionSet = false;
-                bool CalledActionSet = false;
+                bool CorrectActionSet = false;
             };
             
             struct ReturnData
@@ -207,7 +271,7 @@ namespace SimpleOverride
             //------------------------------------------------------------------------------
             template<typename T>
             inline FunctionOverridesReturnProxy ReturnsByAction(FunctionOverridesReturnProxy proxy, 
-                                                                std::function<void(std::vector<ArgInfo>& args, void* out)> returnAction)
+                                                                std::function<void(std::vector<void*>& args, void* out)> returnAction)
             {
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
 
@@ -220,8 +284,6 @@ namespace SimpleOverride
             template<typename T>
             inline FunctionOverridesReturnProxy Returns(FunctionOverridesReturnProxy proxy, T returnData)
             {
-                T* returnDataP = static_cast<T*>(malloc(sizeof(T)));
-
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
                 lastData.ReturnDataInfo.Data = new T(returnData);
                 lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
@@ -235,7 +297,7 @@ namespace SimpleOverride
             //------------------------------------------------------------------------------
             template<typename T>
             inline FunctionOverridesArgumentsProxy SetArgsByAction( FunctionOverridesArgumentsProxy proxy,
-                                                                    std::function<void(std::vector<ArgInfo>& args, void* out)> setArgsAction)
+                                                                    std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
             {
                 ArgumentsData& lastData = OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
                 
@@ -252,7 +314,9 @@ namespace SimpleOverride
                 return proxy;
             }
             
-            #if 0
+            #define FO_LOG_SetArgs 0
+            
+            #if 0 | FO_LOG_SetArgs
                 #define PRINT_BYTES(val)\
                 do\
                 {\
@@ -278,7 +342,7 @@ namespace SimpleOverride
                     lastData.ArgumentsDataInfo.back().DataSet = true;
                     lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
 
-                    #if 0
+                    #if FO_LOG_SetArgs
                         std::cout << "Set args index: "<<lastData.ArgumentsDataInfo.size() - 1 << std::endl;
                         std::cout << "arg pointer: "<<&arg<<std::endl;
                         std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
@@ -293,6 +357,57 @@ namespace SimpleOverride
                     #endif
                 }
                 
+                return SetArgs(proxy, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+                                                            NonComparable<T> arg, Args... args)
+            {
+                ArgumentsData& lastData = OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
+                lastData.ArgumentsDataInfo.push_back(DataInfo());
+                
+                if(!std::is_same<T, Any>())
+                {
+                    lastData.ArgumentsDataInfo.back().Data = new T(*arg.ReferenceVar);
+                    lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<T*>(data); };
+                    lastData.ArgumentsDataInfo.back().DataSet = true;
+                    lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
+
+                    #if FO_LOG_SetArgs
+                        std::cout << "Set args index: "<<lastData.ArgumentsDataInfo.size() - 1 << std::endl;
+                        std::cout << "arg pointer: "<<&arg<<std::endl;
+                        std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
+                        std::cout << "typeid(arg).hash_code(): " << typeid(arg).hash_code() <<std::endl;
+                        std::cout << "Set args value: "<< (*static_cast<T*>(lastData.ArgumentsDataInfo.back().Data)) << std::endl << std::endl;
+                        std::cout << "Original Data: "<<std::endl;
+                        PRINT_BYTES(arg);
+                        
+                        std::cout << "Copied Data: "<<std::endl;
+                        PRINT_BYTES((*static_cast<T*>(lastData.ArgumentsDataInfo.back().Data)));
+                        std::cout << std::endl;
+                    #endif
+                }
+                
+                return SetArgs(proxy, args...);
+            }
+            
+            template<typename T>
+            struct FO_ASSERT_FALSE : std::false_type { };
+            
+            template<typename T, typename... Args>
+            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+                                                            NonCopyable<T> arg, Args... args)
+            {
+                static_assert(FO_ASSERT_FALSE<T>::value, "You can't pass non copyable argument to be set");
+                return SetArgs(proxy, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+                                                            NonComparableCopyable<T> arg, Args... args)
+            {
+                static_assert(FO_ASSERT_FALSE<T>::value, "You can't pass non copyable argument to be set");
                 return SetArgs(proxy, args...);
             }
             
@@ -321,6 +436,20 @@ namespace SimpleOverride
             
             inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy)
             {
+                return proxy;
+            }
+
+            template<typename T, typename... Args>
+            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, NonComparable<T> arg, Args... args)
+            {
+                static_assert(FO_ASSERT_FALSE<T>::value, "You can't check non comparable variable");
+                return proxy;
+            }
+            
+            template<typename T, typename... Args>
+            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, NonComparableCopyable<T> arg, Args... args)
+            {
+                static_assert(FO_ASSERT_FALSE<T>::value, "You can't check non comparable variable");
                 return proxy;
             }
 
@@ -363,8 +492,44 @@ namespace SimpleOverride
                 return WhenCalledWith(proxy, args...);
             }
             
+            template<typename T, typename... Args>
+            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, NonCopyable<T> arg, Args... args)
+            {
+                ArgInfo curArg;
+                curArg.ArgData = const_cast<INTERNAL_FO_PURE_T*>(arg.ReferenceVar);
+                curArg.Destructor = [](void* data){ };
+                curArg.ArgSize = sizeof(T);
+                curArg.ArgTypeHash = typeid(T).hash_code();
+                curArg.ArgSet = true;
+                
+                #if 0
+                    std::cout << "typeid(T).name(): "<<typeid(T).name() <<"\n";
+                    std::cout << "sizeof(T): " << sizeof(T) << "\n";
+                    std::cout << "typeid(T).hash_code(): " << typeid(T).hash_code() << "\n";
+                #endif
+
+                switch(proxy.FunctionProxyType)
+                {
+                    case ProxyType::RETURN:
+                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back()
+                            .ReturnConditionInfo.ArgsCondition.push_back(curArg);
+                        break;
+                    case ProxyType::ARGS:
+                        OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back()
+                            .ArgumentsConditionInfo.ArgsCondition.push_back(curArg);
+                        break;
+                    case ProxyType::COMMON:
+                        std::cout << "[ERROR] This should be checked before calling this" << std::endl;
+                        assert(false);
+                        exit(1);
+                        break;
+                }
+
+                return WhenCalledWith(proxy, args...);
+            }
+            
             inline FunctionOverridesCommonProxy If( FunctionOverridesCommonProxy proxy, 
-                                                    std::function<bool(std::vector<ArgInfo>& args)> condition)
+                                                    std::function<bool(std::vector<void*>& args)> condition)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -387,7 +552,7 @@ namespace SimpleOverride
             }
             
             inline FunctionOverridesCommonProxy Otherwise_Do(   FunctionOverridesCommonProxy proxy, 
-                                                                std::function<void(std::vector<ArgInfo>& args)> action)
+                                                                std::function<void(std::vector<void*>& args)> action)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -410,17 +575,17 @@ namespace SimpleOverride
             }
             
             inline FunctionOverridesCommonProxy WhenCalledExpectedly_Do(FunctionOverridesCommonProxy proxy, 
-                                                                        std::function<void(std::vector<ArgInfo>& args)> action)
+                                                                        std::function<void(std::vector<void*>& args)> action)
             {
                 switch(proxy.FunctionProxyType)
                 {
                     case ProxyType::RETURN:
-                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back().ReturnActionInfo.CalledAction = action;
-                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back().ReturnActionInfo.CalledActionSet = true;
+                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back().ReturnActionInfo.CorrectAction = action;
+                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back().ReturnActionInfo.CorrectActionSet = true;
                         break;
                     case ProxyType::ARGS:
-                        OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back().ArgumentsActionInfo.CalledAction = action;
-                        OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back().ArgumentsActionInfo.CalledActionSet = true;
+                        OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back().ArgumentsActionInfo.CorrectAction = action;
+                        OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back().ArgumentsActionInfo.CorrectActionSet = true;
                         break;
                     case ProxyType::COMMON:
                         std::cout << "[ERROR] This should be checked before calling this" << std::endl;
@@ -436,45 +601,79 @@ namespace SimpleOverride
         //Implementation methods for querying (and setting) the correct return or arugment data
         //==============================================================================
         private:
-            inline void AppendArguments(std::vector<ArgInfo>& argumentsList){};
+            //Appending arguments from function calls
+            inline void AppendArguments(std::vector<void*>& argumentsList){};
 
             template<typename T, typename... Args>
-            inline void AppendArguments(std::vector<ArgInfo>& argumentsList, T arg, Args... args)
+            inline void AppendArguments(std::vector<void*>& argumentsList, T& arg, Args&... args)
             {
-                ArgInfo curArgInfo;
-                curArgInfo.ArgData = new T(arg);
-                curArgInfo.Destructor = [](void* data){ delete static_cast<T*>(data); };
-                curArgInfo.ArgSize = sizeof(T);
-                curArgInfo.ArgTypeHash = typeid(T).hash_code();
-                curArgInfo.ArgSet = true;
-                
-                argumentsList.push_back(curArgInfo);
+                argumentsList.push_back((INTERNAL_FO_PURE_T*)&arg);
                 AppendArguments(argumentsList, args...);
             }
             
-            inline void AppendArgumentsDereference(std::vector<ArgInfo>& argumentsList) {}
+            template<typename T, typename... Args>
+            inline void AppendArguments(std::vector<void*>& argumentsList, NonCopyable<T>& arg, Args&... args)
+            {
+                argumentsList.push_back((INTERNAL_FO_PURE_T*)&arg);
+                AppendArguments(argumentsList, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void AppendArguments(std::vector<void*>& argumentsList, NonComparable<T>& arg, Args&... args)
+            {
+                argumentsList.push_back((INTERNAL_FO_PURE_T*)&arg);
+                AppendArguments(argumentsList, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void AppendArguments(std::vector<void*>& argumentsList, NonComparableCopyable<T>& arg, Args&... args)
+            {
+                argumentsList.push_back((INTERNAL_FO_PURE_T*)&arg);
+                AppendArguments(argumentsList, args...);
+            }
+            
+            inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList) {}
 
             template<typename T, typename... Args>
-            inline void AppendArgumentsDereference(std::vector<ArgInfo>& argumentsList, T& arg, Args&... args)
+            inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, T& arg, Args&... args)
             {
                 ArgInfo curArgInfo;
-                curArgInfo.ArgData = new INTERNAL_FO_PURE_T(arg);
-                curArgInfo.Destructor = [](void* data){ delete static_cast<INTERNAL_FO_PURE_T*>(data); };
-                curArgInfo.ArgSize = sizeof(INTERNAL_FO_PURE_T);
-                curArgInfo.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
-                curArgInfo.ArgSet = true;
-                
+                if(!std::is_same<T, Any>())
+                {
+                    curArgInfo.ArgSize = sizeof(INTERNAL_FO_PURE_T);
+                    curArgInfo.ArgTypeHash = typeid(INTERNAL_FO_PURE_T).hash_code();
+                    curArgInfo.ArgSet = true;
+                }
+
                 argumentsList.push_back(curArgInfo);
-                AppendArgumentsDereference(argumentsList, args...);
+                AppendDereferenceArgsInfo(argumentsList, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, NonCopyable<T>& arg, Args&... args)
+            {
+                AppendDereferenceArgsInfo(argumentsList, (INTERNAL_FO_PURE_T&)arg, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, NonComparable<T>& arg, Args&... args)
+            {
+                AppendDereferenceArgsInfo(argumentsList, (INTERNAL_FO_PURE_T&)arg, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, NonComparableCopyable<T>& arg, Args&... args)
+            {
+                AppendDereferenceArgsInfo(argumentsList, (INTERNAL_FO_PURE_T&)arg, args...);
             }
             
             template<   typename T, 
                         typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
                         typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
                         typename... Args>
-            inline void AppendArgumentsDereference(std::vector<ArgInfo>& argumentsList, T* arg, Args&... args)
+            inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, T* arg, Args&... args)
             {
-                AppendArgumentsDereference(argumentsList, *arg, args...);
+                AppendDereferenceArgsInfo(argumentsList, *arg, args...);
             }
 
             inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex){ return true; };
@@ -528,6 +727,30 @@ namespace SimpleOverride
                 return CheckArguments(argumentsListToCheck, ++argIndex, args...);
             }
             
+            template<typename T, typename... Args>
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, NonCopyable<T>& arg, Args&... args)
+            {
+                return CheckArguments(argumentsListToCheck, argIndex, (T&)arg, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, NonComparable<T>& arg, Args&... args)
+            {
+                if(argIndex >= argumentsListToCheck.size())
+                    return false;
+            
+                return !argumentsListToCheck[argIndex].ArgSet ? CheckArguments(argumentsListToCheck, ++argIndex, args...) : false;
+            }
+            
+            template<typename T, typename... Args>
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, NonComparableCopyable<T>& arg, Args&... args)
+            {
+                if(argIndex >= argumentsListToCheck.size())
+                    return false;
+
+                return !argumentsListToCheck[argIndex].ArgSet ? CheckArguments(argumentsListToCheck, ++argIndex, args...) : false;
+            }
+            
             template<   typename T, 
                         typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
                         typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
@@ -538,11 +761,11 @@ namespace SimpleOverride
             }
             
             #define FO_LOG_GetCorrectReturnDataInfo 0
-            template<typename T, typename FUNC_SIG, typename... Args>
-            inline int GetCorrectReturnDataInfo(T& returnRef, FUNC_SIG functionSignature, Args... args)
+
+            template<typename T, typename... Args>
+            inline int GetCorrectReturnDataInfo(T& returnRef, std::string functionName, Args&... args)
             {
-                std::string functionSignatureString = typeid(FUNC_SIG).name();
-                if(OverrideReturnInfos.find(functionSignatureString) == OverrideReturnInfos.end())
+                if(OverrideReturnInfos.find(functionName) == OverrideReturnInfos.end())
                 {
                     std::cout << "[ERROR] This should be checked before calling this" << std::endl;
                     assert(false);
@@ -553,10 +776,10 @@ namespace SimpleOverride
                     std::cout <<"GetCorrectReturnDataInfo called\n";
                 #endif
 
-                std::vector<ArgInfo> argumentsList;
+                std::vector<void*> argumentsList;
                 AppendArguments(argumentsList, args...);
                 
-                std::vector<ReturnData>& curReturnDatas = OverrideReturnInfos[functionSignatureString].ReturnDatas;
+                std::vector<ReturnData>& curReturnDatas = OverrideReturnInfos[functionName].ReturnDatas;
                 int returnIndex = -1;
                 for(int i = 0; i < curReturnDatas.size(); i++)
                 {
@@ -571,7 +794,7 @@ namespace SimpleOverride
                             std::cout << "Failed at return data exist\n";
                         #endif
                         if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.CalledAction(argumentsList);
+                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
                         continue;
                     }
                 
@@ -582,7 +805,7 @@ namespace SimpleOverride
                             std::cout << "Failed at return type\n";
                         #endif
                         if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.CalledAction(argumentsList);
+                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
                         
                         continue;
                     }
@@ -594,7 +817,7 @@ namespace SimpleOverride
                             std::cout << "Failed at Check condition\n";
                         #endif
                         if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.CalledAction(argumentsList);
+                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
                         
                         continue;
                     }
@@ -607,7 +830,7 @@ namespace SimpleOverride
                             std::cout << "Failed at Check parameter\n";
                         #endif
                         if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.CalledAction(argumentsList);
+                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
 
                         continue;
                     }
@@ -620,7 +843,7 @@ namespace SimpleOverride
                             std::cout << "Failed at Check times\n";
                         #endif
                         if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.CalledAction(argumentsList);
+                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
 
                         continue;
                     }
@@ -633,49 +856,50 @@ namespace SimpleOverride
                 }
                 
                 //Deallocating argumentsList
-                for(int i = 0; i < argumentsList.size(); i++)
-                    argumentsList[i].Destructor(argumentsList[i].ArgData);
+                //for(int i = 0; i < argumentsList.size(); i++)
+                //    argumentsList[i].Destructor(argumentsList[i].ArgData);
                 
                 return returnIndex;
             }
             
-            template<typename FUNC_SIG, typename... Args>
-            inline int GetCorrectArgumentsDataInfo(FUNC_SIG functionSignature, Args&... args)
+            #define FO_LOG_GetCorrectArgumentsDataInfo 0
+            
+            template<typename... Args>
+            inline int GetCorrectArgumentsDataInfo(std::string functionName, Args&... args)
             {
-                std::string functionSignatureString = typeid(FUNC_SIG).name();
-                if(OverrideArgumentsInfos.find(functionSignatureString) == OverrideArgumentsInfos.end())
+                if(OverrideArgumentsInfos.find(functionName) == OverrideArgumentsInfos.end())
                 {
                     std::cout << "[ERROR] This should be checked before calling this" << std::endl;
                     assert(false);
                     exit(1);
                 }
                 
-                #if 0
+                #if FO_LOG_GetCorrectArgumentsDataInfo
                     std::cout <<"GetCorrectArgumentsDataInfo called\n";
                 #endif
                 
-                std::vector<ArgInfo> argumentsList;
+                std::vector<void*> argumentsList;
                 AppendArguments(argumentsList, args...);
                 
-                std::vector<ArgInfo> derefArgumentsList;
-                AppendArgumentsDereference(derefArgumentsList, args...);
+                std::vector<ArgInfo> deRefArgumentsList;
+                AppendDereferenceArgsInfo(deRefArgumentsList, args...);
                 
-                std::vector<ArgumentsData>& curArgData = OverrideArgumentsInfos[functionSignatureString].ArgumentsDatas;
+                std::vector<ArgumentsData>& curArgData = OverrideArgumentsInfos[functionName].ArgumentsDatas;
                 int returnIndex = -1;
                 for(int i = 0; i < curArgData.size(); i++)
                 {
-                    #if 0
+                    #if FO_LOG_GetCorrectArgumentsDataInfo
                         std::cout << "Checking arg data["<<i<<"]\n";
                     #endif
                 
                     //Check set argument data exist
-                    if(curArgData[i].ArgumentsDataInfo.size() != derefArgumentsList.size())
+                    if(curArgData[i].ArgumentsDataInfo.size() != deRefArgumentsList.size())
                     {
-                        #if 0
+                        #if FO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check set argument data exist\n";
                         #endif
                         if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
-                            curArgData[i].ArgumentsActionInfo.CalledAction(argumentsList);
+                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
                         
                         continue;
                     }
@@ -685,9 +909,9 @@ namespace SimpleOverride
                     for(int j = 0; j < curArgData[i].ArgumentsDataInfo.size(); j++)
                     {
                         if( curArgData[i].ArgumentsDataInfo[j].DataSet &&
-                            curArgData[i].ArgumentsDataInfo[j].DataType != derefArgumentsList[j].ArgTypeHash)
+                            curArgData[i].ArgumentsDataInfo[j].DataType != deRefArgumentsList[j].ArgTypeHash)
                         {
-                            #if 0
+                            #if FO_LOG_GetCorrectArgumentsDataInfo
                                 std::cout << "Failed at Check arguments types\n";
                             #endif
                             argumentTypeFailed = true;
@@ -697,7 +921,7 @@ namespace SimpleOverride
                     if(argumentTypeFailed)
                     {
                         if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
-                            curArgData[i].ArgumentsActionInfo.CalledAction(argumentsList);
+                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
 
                         continue;
                     }
@@ -705,7 +929,7 @@ namespace SimpleOverride
                     //Check condition
                     if(curArgData[i].ArgumentsConditionInfo.DataConditionSet && !curArgData[i].ArgumentsConditionInfo.DataCondition(argumentsList))
                     {
-                        #if 0
+                        #if FO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check condition\n";
                         #endif
                         continue;
@@ -715,11 +939,11 @@ namespace SimpleOverride
                     if( !curArgData[i].ArgumentsConditionInfo.ArgsCondition.empty() && 
                         !CheckArguments(curArgData[i].ArgumentsConditionInfo.ArgsCondition, 0, args...))
                     {
-                        #if 0
+                        #if FO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check parameter\n";
                         #endif
                         if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
-                            curArgData[i].ArgumentsActionInfo.CalledAction(argumentsList);
+                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
                         continue;
                     }
                         
@@ -727,15 +951,15 @@ namespace SimpleOverride
                     if( curArgData[i].ArgumentsConditionInfo.Times >= 0 && 
                         curArgData[i].ArgumentsConditionInfo.CalledTimes >= curArgData[i].ArgumentsConditionInfo.Times)
                     {
-                        #if 0
+                        #if FO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check times\n";
                         #endif
                         if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
-                            curArgData[i].ArgumentsActionInfo.CalledAction(argumentsList);
+                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
                         continue;
                     }
                     
-                    #if 0
+                    #if FO_LOG_GetCorrectArgumentsDataInfo
                         std::cout << "Argument data found: "<<i<<"\n";
                     #endif
                     
@@ -744,20 +968,22 @@ namespace SimpleOverride
                 }
                 
                 //Deallocating argumentsList
-                for(int i = 0; i < argumentsList.size(); i++)
-                    argumentsList[i].Destructor(argumentsList[i].ArgData);
+                //for(int i = 0; i < argumentsList.size(); i++)
+                //    argumentsList[i].Destructor(argumentsList[i].ArgData);
                 
                 //Deallocating derefArgumentsList
-                for(int i = 0; i < derefArgumentsList.size(); i++)
-                    derefArgumentsList[i].Destructor(derefArgumentsList[i].ArgData);
+                //for(int i = 0; i < derefArgumentsList.size(); i++)
+                //    derefArgumentsList[i].Destructor(derefArgumentsList[i].ArgData);
 
                 return returnIndex;
             }
             
-            inline void ModifyArgs(std::vector<ArgInfo>& argumentsList, std::vector<DataInfo>& argsData, int index) {}
+            #define FO_LOG_ModifyArgs 0
+            
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index) {}
 
             template<typename T, typename... Args>
-            inline void ModifyArgs(std::vector<ArgInfo>& argumentsList, std::vector<DataInfo>& argsData, int index, T& arg, Args&... args)
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, T& arg, Args&... args)
             {
                 if(!argsData[index].DataSet && !argsData[index].DataActionSet)
                 {
@@ -769,7 +995,7 @@ namespace SimpleOverride
                 {
                     INTERNAL_FO_PURE_T& pureArg = const_cast<INTERNAL_FO_PURE_T&>(arg); 
                     pureArg = *static_cast<INTERNAL_FO_PURE_T*>(argsData[index].Data);
-                    #if 0
+                    #if FO_LOG_ModifyArgs
                         std::cout << "modified index: "<<index << std::endl;
                         std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
                         std::cout << "typeid(arg).hash_code(): " << typeid(arg).hash_code() <<std::endl;
@@ -788,11 +1014,61 @@ namespace SimpleOverride
                 ModifyArgs(argumentsList, argsData, ++index, args...);
             }
             
+            template<typename T, typename... Args>
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, NonComparable<T>& arg, Args&... args)
+            {
+                if(!argsData[index].DataSet && !argsData[index].DataActionSet)
+                {
+                    ModifyArgs(argumentsList, argsData, ++index, args...);
+                    return;
+                }
+            
+                if(argsData[index].DataSet)
+                {
+                    INTERNAL_FO_PURE_T& pureArg = (INTERNAL_FO_PURE_T&)(arg); 
+                    pureArg = *static_cast<INTERNAL_FO_PURE_T*>(argsData[index].Data);
+                    #if FO_LOG_ModifyArgs
+                        std::cout << "modified index: "<<index << std::endl;
+                        std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
+                        std::cout << "typeid(arg).hash_code(): " << typeid(arg).hash_code() <<std::endl;
+                        std::cout << "argsData[index].DataType: " << argsData[index].DataType <<std::endl;
+                        std::cout << "arg value: "<< arg << std::endl;
+                        std::cout << "modified value: "<< (*static_cast<T*>(argsData[index].Data)) << std::endl << std::endl;
+                        std::cout << "modified value bytes:" << std::endl;
+                        
+                        PRINT_BYTES((*static_cast<T*>(argsData[index].Data)));
+                        std::cout << std::endl;
+                    #endif
+                }
+                else
+                    argsData[index].DataAction(argumentsList, &((INTERNAL_FO_PURE_T&)(arg)));
+
+                ModifyArgs(argumentsList, argsData, ++index, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, NonCopyable<T>& arg, Args&... args)
+            {
+                #if FO_LOG_ModifyArgs
+                    std ::cout <<"Skipping ModifyArgs for index "<<index << " for NonCopyable\n";
+                #endif
+                ModifyArgs(argumentsList, argsData, ++index, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, NonComparableCopyable<T>& arg, Args&... args)
+            {
+                #if FO_LOG_ModifyArgs
+                    std ::cout <<"Skipping ModifyArgs for index "<<index << " for NonCopyable\n";
+                #endif
+                ModifyArgs(argumentsList, argsData, ++index, args...);
+            }
+            
             template<   typename T, 
                         typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
                         typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
                         typename... Args>
-            inline void ModifyArgs(std::vector<ArgInfo>& argumentsList, std::vector<DataInfo>& argsData, int index, T* arg, Args&... args)
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, T* arg, Args&... args)
             {
                 ModifyArgs(argumentsList, argsData, index, *arg, args...);
             }
@@ -849,28 +1125,21 @@ namespace SimpleOverride
             //Overrding Returns
             //------------------------------------------------------------------------------
             #define FO_LOG_OverrideReturns 0
-            template<typename FUNC_SIG>
-            inline FunctionOverridesReturnProxy OverrideReturns(FUNC_SIG functionName)
+            inline FunctionOverridesReturnProxy Internal_OverrideReturns(std::string functionName)
             {
-                std::string functionNameString = typeid(FUNC_SIG).name();
-                
                 #if FO_LOG_OverrideReturns
                     std::cout << "OverrideReturns\n";
-                    std::cout << "functionNameString: "<<functionNameString << "\n";
-                    std::cout << "typeid(FUNC_SIG).hash_code(): "<<typeid(FUNC_SIG).hash_code() << "\n";
+                    std::cout << "functionName: "<<functionName << "\n";
                 #endif
 
-                OverrideReturnInfos[functionNameString].ReturnDatas.push_back(ReturnData());
-                return FunctionOverridesReturnProxy(functionNameString, *this, ProxyType::RETURN);
+                OverrideReturnInfos[functionName].ReturnDatas.push_back(ReturnData());
+                return FunctionOverridesReturnProxy(functionName, *this, ProxyType::RETURN);
             }
             
-            template<typename FUNC_SIG>
-            inline void ClearOverrideReturns(FUNC_SIG functionName)
+            inline void Internal_ClearOverrideReturns(std::string functionName)
             {
-                std::string functionNameString = typeid(FUNC_SIG).name();
-
-                if(OverrideReturnInfos.find(functionNameString) != OverrideReturnInfos.end())
-                    OverrideReturnInfos.erase(functionNameString);
+                if(OverrideReturnInfos.find(functionName) != OverrideReturnInfos.end())
+                    OverrideReturnInfos.erase(functionName);
             }
             
             inline void ClearAllOverrideReturns()
@@ -879,32 +1148,31 @@ namespace SimpleOverride
             }
             
             #define FO_LOG_CheckOverrideAndReturn 0
-            template<typename T, typename FUNC_SIG, typename... Args>
-            inline bool CheckOverrideAndReturn(T& returnRef, FUNC_SIG functionName, Args&... args)
+            
+            template<typename T, typename... Args>
+            inline bool Internal_CheckOverrideAndReturn(T& returnRef, std::string functionName, Args&... args)
             {
-                std::string functionNameString = typeid(FUNC_SIG).name();
                 #if FO_LOG_CheckOverrideAndReturn
                     std::cout << "CheckOverrideAndReturn\n";
-                    std::cout << "functionNameString: "<<functionNameString << "\n";
-                    std::cout << "typeid(FUNC_SIG).hash_code(): "<<typeid(FUNC_SIG).hash_code() << "\n";
+                    std::cout << "functionName: "<<functionName << "\n";
                 #endif
-                if(OverrideReturnInfos.find(functionNameString) == OverrideReturnInfos.end())
+                if(OverrideReturnInfos.find(functionName) == OverrideReturnInfos.end())
                     return false;
             
                 int correctDataIndex = GetCorrectReturnDataInfo(returnRef, functionName, args...);
                 
-                std::vector<ArgInfo> argumentsList;
+                std::vector<void*> argumentsList;
                 AppendArguments(argumentsList, args...);
                 
                 //Called correctly action
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    ReturnData& correctData = OverrideReturnInfos[functionNameString].ReturnDatas[correctDataIndex];
+                    ReturnData& correctData = OverrideReturnInfos[functionName].ReturnDatas[correctDataIndex];
                     correctData.ReturnConditionInfo.CalledTimes++;
                     
-                    if(correctData.ReturnActionInfo.CalledActionSet)
-                        correctData.ReturnActionInfo.CalledAction(argumentsList);
+                    if(correctData.ReturnActionInfo.CorrectActionSet)
+                        correctData.ReturnActionInfo.CorrectAction(argumentsList);
                     
                     if(correctData.ReturnDataInfo.DataSet)
                         returnRef = *reinterpret_cast<T*>(correctData.ReturnDataInfo.Data);
@@ -916,25 +1184,17 @@ namespace SimpleOverride
                 }
                 
                 //Deallocating argumentsList
-                for(int i = 0; i < argumentsList.size(); i++)
-                    argumentsList[i].Destructor(argumentsList[i].ArgData);
+                //for(int i = 0; i < argumentsList.size(); i++)
+                //    argumentsList[i].Destructor(argumentsList[i].ArgData);
 
                 return returnResult;
             }
             
-            #define FO_RETURN_IF_FOUND_WITHOUT_ARGS(functionOverrideObj, functionRef, returnType)\
+            #define FO_RETURN_IF_FOUND(functionOverrideObj, functionSig, returnType, ...)\
             do\
             {\
                 returnType returnVal;\
-                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, functionRef))\
-                    return returnVal;\
-            } while(0)
-            
-            #define FO_RETURN_IF_FOUND(functionOverrideObj, functionRef, returnType, ...)\
-            do\
-            {\
-                returnType returnVal;\
-                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, functionRef, __VA_ARGS__))\
+                if(functionOverrideObj.CheckOverrideAndReturn(returnVal, functionSig, __VA_ARGS__))\
                     return returnVal;\
             } while(0)
 
@@ -943,27 +1203,22 @@ namespace SimpleOverride
             //Overrding Arguments
             //------------------------------------------------------------------------------
             #define FO_LOG_OverrideArgs 0
-            template<typename FUNC_SIG>
-            inline FunctionOverridesArgumentsProxy OverrideArgs(FUNC_SIG functionName)
+
+            inline FunctionOverridesArgumentsProxy Internal_OverrideArgs(std::string functionName)
             {
-                std::string functionNameString = typeid(FUNC_SIG).name();
                 #if FO_LOG_OverrideArgs
                     std::cout << "OverrideArgs\n";
-                    std::cout << "functionNameString: "<<functionNameString << "\n";
-                    std::cout << "typeid(FUNC_SIG).hash_code(): "<<typeid(FUNC_SIG).hash_code() << "\n";
+                    std::cout << "functionName: "<<functionName << "\n";
                 #endif
 
-                OverrideArgumentsInfos[functionNameString].ArgumentsDatas.push_back(ArgumentsData());
-                return FunctionOverridesArgumentsProxy(functionNameString, *this, ProxyType::ARGS);
+                OverrideArgumentsInfos[functionName].ArgumentsDatas.push_back(ArgumentsData());
+                return FunctionOverridesArgumentsProxy(functionName, *this, ProxyType::ARGS);
             }
             
-            template<typename FUNC_SIG>
-            inline void ClearOverrideArgs(FUNC_SIG functionName)
+            inline void Internal_ClearOverrideArgs(std::string functionName)
             {
-                std::string functionNameString = typeid(FUNC_SIG).name();
-
-                if(OverrideArgumentsInfos.find(functionNameString) != OverrideArgumentsInfos.end())
-                    OverrideArgumentsInfos.erase(functionNameString);
+                if(OverrideArgumentsInfos.find(functionName) != OverrideArgumentsInfos.end())
+                    OverrideArgumentsInfos.erase(functionName);
             }
             
             inline void ClearAllOverrideArgs()
@@ -972,80 +1227,75 @@ namespace SimpleOverride
             }
 
             #define FO_LOG_CheckOverrideAndSetArgs 0
-            template<typename FUNC_SIG, typename... Args>
-            inline bool CheckOverrideAndSetArgs(FUNC_SIG functionName, Args&... args)
+
+            template<typename... Args>
+            inline bool Internal_CheckOverrideAndSetArgs(std::string functionName, Args&... args)
             {
-                std::string functionNameString = typeid(FUNC_SIG).name();
                 #if FO_LOG_CheckOverrideAndSetArgs
                     std::cout << "CheckOverrideAndSetArgs\n";
-                    std::cout << "functionNameString: "<<functionNameString << "\n";
-                    std::cout << "typeid(FUNC_SIG).hash_code(): "<<typeid(FUNC_SIG).hash_code() << "\n";
+                    std::cout << "functionName: "<<functionName << "\n";
                 #endif
-                if(OverrideArgumentsInfos.find(functionNameString) == OverrideArgumentsInfos.end())
+                if(OverrideArgumentsInfos.find(functionName) == OverrideArgumentsInfos.end())
                     return false;
             
                 int correctDataIndex = GetCorrectArgumentsDataInfo(functionName, args...);
                 
-                std::vector<ArgInfo> argumentsList;
+                std::vector<void*> argumentsList;
                 AppendArguments(argumentsList, args...);
                 
                 //Called correctly action
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    ArgumentsData& correctData = OverrideArgumentsInfos[functionNameString].ArgumentsDatas[correctDataIndex];
+                    ArgumentsData& correctData = OverrideArgumentsInfos[functionName].ArgumentsDatas[correctDataIndex];
                     correctData.ArgumentsConditionInfo.CalledTimes++;
                     
-                    if(correctData.ArgumentsActionInfo.CalledActionSet)
-                        correctData.ArgumentsActionInfo.CalledAction(argumentsList);
+                    if(correctData.ArgumentsActionInfo.CorrectActionSet)
+                        correctData.ArgumentsActionInfo.CorrectAction(argumentsList);
 
                     ModifyArgs(argumentsList, correctData.ArgumentsDataInfo, 0, args...);
                     returnResult = true;
                 }
 
                 //Deallocating argumentsList
-                for(int i = 0; i < argumentsList.size(); i++)
-                    argumentsList[i].Destructor(argumentsList[i].ArgData);
+                //for(int i = 0; i < argumentsList.size(); i++)
+                //    argumentsList[i].Destructor(argumentsList[i].ArgData);
 
                 return returnResult;
             }
             
-            #define FO_ARGUMENTS_IF_FOUND(functionOverrideObj, functionRef, ...)\
-            functionOverrideObj.CheckOverrideAndSetArgs(functionRef, __VA_ARGS__)
+            #define FO_ARGUMENTS_IF_FOUND(functionOverrideObj, functionSig, ...)\
+            functionOverrideObj.CheckOverrideAndSetArgs(functionSig, __VA_ARGS__)
             
-            #define FO_ARGUMENTS_AND_RETURN_IF_FOUND(returnValue, functionOverrideObj, functionRef, ...)\
+            #define FO_ARGUMENTS_AND_RETURN_IF_FOUND(returnValue, functionOverrideObj, functionSig, ...)\
             do\
             {\
-                if(functionOverrideObj.CheckOverrideAndSetArgs(functionRef, __VA_ARGS__))\
+                if(functionOverrideObj.CheckOverrideAndSetArgs(functionSig, __VA_ARGS__))\
                     return returnValue;\
             } while(0)
             
             #define FO_DECLARE_INSTNACE(OverrideObjName) mutable SimpleOverride::FunctionOverrides OverrideObjName
             
             #define FO_DECLARE_OVERRIDE_METHODS(OverrideObjName)\
-            template<typename FUNC_SIG>\
-            inline SimpleOverride::FunctionOverridesArgumentsProxy OverrideArgs(FUNC_SIG functionName)\
+            inline SimpleOverride::FunctionOverridesArgumentsProxy Internal_OverrideArgs(std::string functionName)\
             {\
-                return OverrideObjName.OverrideArgs(functionName);\
+                return OverrideObjName.Internal_OverrideArgs(functionName);\
             }\
-            template<typename FUNC_SIG>\
-            inline void ClearOverrideArgs(FUNC_SIG functionName)\
+            inline void Internal_ClearOverrideArgs(std::string functionName)\
             {\
-                OverrideObjName.ClearOverrideArgs(functionName);\
+                OverrideObjName.Internal_ClearOverrideArgs(functionName);\
             }\
             inline void ClearAllOverrideArgs()\
             {\
                 OverrideObjName.ClearAllOverrideArgs();\
             }\
-            template<typename FUNC_SIG>\
-            inline SimpleOverride::FunctionOverridesReturnProxy OverrideReturns(FUNC_SIG functionName)\
+            inline SimpleOverride::FunctionOverridesReturnProxy Internal_OverrideReturns(std::string functionName)\
             {\
-                return OverrideObjName.OverrideReturns(functionName);\
+                return OverrideObjName.Internal_OverrideReturns(functionName);\
             }\
-            template<typename FUNC_SIG>\
-            inline void ClearOverrideReturns(FUNC_SIG functionName)\
+            inline void Internal_ClearOverrideReturns(std::string functionName)\
             {\
-                OverrideObjName.ClearOverrideReturns(functionName);\
+                OverrideObjName.Internal_ClearOverrideReturns(functionName);\
             }\
             inline void ClearAllOverrideReturns()\
             {\
@@ -1061,7 +1311,7 @@ namespace SimpleOverride
     using CommonProxy = FunctionOverridesCommonProxy;
 
     template<typename T>
-    inline ReturnProxy ReturnProxy::ReturnsByAction(std::function<void(std::vector<ArgInfo>& args, void* out)> returnAction)
+    inline ReturnProxy ReturnProxy::ReturnsByAction(std::function<void(std::vector<void*>& args, void* out)> returnAction)
     {
         return FunctionOverridesObj.ReturnsByAction<T>(*this, returnAction);
     }
@@ -1073,7 +1323,7 @@ namespace SimpleOverride
     }
     
     template<typename T>
-    inline ArgsProxy ArgsProxy::SetArgsByAction(std::function<void(std::vector<ArgInfo>& args, void* out)> setArgsAction)
+    inline ArgsProxy ArgsProxy::SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
     {
         return FunctionOverridesObj.SetArgsByAction<T>(*this, setArgsAction);
     }
@@ -1095,20 +1345,129 @@ namespace SimpleOverride
         return FunctionOverridesObj.WhenCalledWith(*this, args...);
     }
     
-    inline CommonProxy CommonProxy::If(std::function<bool(std::vector<ArgInfo>& args)> condition)
+    inline CommonProxy CommonProxy::If(std::function<bool(std::vector<void*>& args)> condition)
     {
         return FunctionOverridesObj.If(*this, condition);
     }
     
-    inline CommonProxy CommonProxy::Otherwise_Do(std::function<void(std::vector<ArgInfo>& args)> action)
+    inline CommonProxy CommonProxy::Otherwise_Do(std::function<void(std::vector<void*>& args)> action)
     {
         return FunctionOverridesObj.Otherwise_Do(*this, action);
     }
     
-    inline CommonProxy CommonProxy::WhenCalledExpectedly_Do(std::function<void(std::vector<ArgInfo>& args)> action)
+    inline CommonProxy CommonProxy::WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action)
     {
         return FunctionOverridesObj.WhenCalledExpectedly_Do(*this, action);
     }
+    
+    //==============================================================================
+    //Macros and functions for translating function signature to string
+    //==============================================================================
+    inline std::string ProcessFunctionSig(std::string functionSig)
+    {
+        //Trimming
+        int firstCharIndex = -1;
+        for(int i = 0; i < functionSig.size(); i++)
+        {
+            if(functionSig[i] != ' ')
+            {
+                firstCharIndex = i;
+                break;
+            }
+        }
+        
+        int lastCharIndex = -1;
+        for(int i = functionSig.size() - 1; i >= 0; i--)
+        {
+            if(functionSig[i] != ' ')
+            {
+                lastCharIndex = i;
+                break;
+            }
+        }
+        
+        functionSig = functionSig.substr(firstCharIndex, lastCharIndex - firstCharIndex + 1);
+        
+        //Remove any consecutive spaces
+        std::set<int> spacesToRemove;
+        bool isLastSpace = false;
+        for(int i = 0; i < functionSig.size(); i++)
+        {
+            if(isLastSpace)
+            {
+                if(functionSig[i] == ' ')
+                    spacesToRemove.insert(i);
+                else
+                    isLastSpace = false;
+            }
+            else if(functionSig[i] == ' ')
+                isLastSpace = true;
+        }
+        
+        //Remove spaces around parentheses and commas
+        for(int i = 0; i < functionSig.size(); i++)
+        {
+            switch(functionSig[i])
+            {
+                case '(':
+                case ')':
+                case ',':
+                case '*':
+                case '&':
+                case ':':
+                case '<':
+                case '>':
+                    if(i > 0 && functionSig[i - 1] == ' ')
+                        spacesToRemove.insert(i - 1);
+                    
+                    if(i < functionSig.size() - 1 && functionSig[i + 1] == ' ')
+                        spacesToRemove.insert(i + 1);
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        
+        for(auto it = spacesToRemove.rbegin(); it != spacesToRemove.rend(); it++)
+            functionSig.erase(functionSig.begin() + *it);
+
+        return functionSig;
+    }
+    
+    #define FO_INTERNAL_APPEND_ARGS_NOT_EMPTY(...) , __VA_ARGS__
+    #define FO_INTERNAL_APPEND_ARGS_EMPTY(...)
+    
+    //NOTE: Up to 20 arguments
+    #define FO_INTERNAL_EXPAND_IF_EMPTY() ,,,,,,,,,,,,,,,,,,,,
+    #define FO_INTERNAL_TEST_EMPTY(...)   FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ ()
+    #define FO_INTERNAL_SELECT_TAG(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _TAG, ...) _TAG
+    #define FO_INTERNAL_CAT(a, b) a b
+    #define FO_INTERNAL_FUNC_CAT(a, b) a ## b
+    
+    #define FO_INTERNAL_GET_TAG(...) FO_INTERNAL_CAT( FO_INTERNAL_SELECT_TAG, (FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ (), _EMPTY, \
+                                                            _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY,\
+                                                            _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY) )
+    
+    //Debug
+    //#define FO_INTERNAL_GET_TAG(...) FO_INTERNAL_CAT( FO_INTERNAL_SELECT_TAG, ( FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ (), _0, \
+    //                                                    _20, _19, _18, _17, _16, _15, _14, _13, _12, _11,\
+    //                                                    _10, _9, _8, _7, _6, _5, _4, _3, _2, _1) )
+    
+    #define FO_INTERNAL_APPEND_ARGS(...) FO_INTERNAL_CAT( FO_INTERNAL_FUNC_CAT, (FO_INTERNAL_APPEND_ARGS, FO_INTERNAL_GET_TAG(__VA_ARGS__) (__VA_ARGS__)) )
+    
+    #define FO_INTERNAL_STR(x) #x
+    
+    
+    #define OverrideReturns(functionSig) Internal_OverrideReturns(SimpleOverride::ProcessFunctionSig(FO_INTERNAL_STR(functionSig)))
+    #define ClearOverrideReturns(functionSig) Internal_ClearOverrideReturns(SimpleOverride::ProcessFunctionSig(FO_INTERNAL_STR(functionSig)))
+    #define CheckOverrideAndReturn(returnRef, functionSig, ...)\
+        Internal_CheckOverrideAndReturn(returnRef, SimpleOverride::ProcessFunctionSig(FO_INTERNAL_STR(functionSig)) FO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
+    
+    #define OverrideArgs(functionSig) Internal_OverrideArgs(SimpleOverride::ProcessFunctionSig(FO_INTERNAL_STR(functionSig)))
+    #define ClearOverrideArgs(functionSig) Internal_ClearOverrideArgs(SimpleOverride::ProcessFunctionSig(FO_INTERNAL_STR(functionSig)))
+    #define CheckOverrideAndSetArgs(functionSig, ...)\
+        Internal_CheckOverrideAndSetArgs(SimpleOverride::ProcessFunctionSig(FO_INTERNAL_STR(functionSig)) FO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
 }
 
 const SimpleOverride::Any FO_ANY;
@@ -1120,5 +1479,7 @@ using FO_NonCopyable = SimpleOverride::NonCopyable<T>;
 template<typename T>
 using FO_NonComparable = SimpleOverride::NonComparable<T>;
 
+template<typename T>
+using FO_NonComparableCopyable = SimpleOverride::NonComparableCopyable<T>;
 
 #endif
