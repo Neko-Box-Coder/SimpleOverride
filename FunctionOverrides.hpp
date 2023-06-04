@@ -29,6 +29,7 @@ namespace SimpleOverride
     struct ArgInfo
     {
         void* ArgData = nullptr;
+        std::function<void*(void*)> CopyConstructor;
         std::function<void(void*)> Destructor;
         size_t ArgSize = 0;
         size_t ArgTypeHash = 0;
@@ -208,6 +209,7 @@ namespace SimpleOverride
             {
                 std::size_t DataType = 0;
                 void* Data = nullptr;
+                std::function<void*(void*)> CopyConstructor;
                 std::function<void(void*)> Destructor;
                 std::function<void(std::vector<void*>& args, void* out)> DataAction;
                 bool DataSet = false;
@@ -286,6 +288,7 @@ namespace SimpleOverride
             {
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
                 lastData.ReturnDataInfo.Data = new T(returnData);
+                lastData.ReturnDataInfo.CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
                 lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
                 lastData.ReturnDataInfo.DataSet = true;
                 lastData.ReturnDataInfo.DataType = typeid(T).hash_code();
@@ -338,6 +341,7 @@ namespace SimpleOverride
                 if(!std::is_same<T, Any>())
                 {
                     lastData.ArgumentsDataInfo.back().Data = new T(arg);
+                    lastData.ArgumentsDataInfo.back().CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
                     lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<T*>(data); };
                     lastData.ArgumentsDataInfo.back().DataSet = true;
                     lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
@@ -370,6 +374,7 @@ namespace SimpleOverride
                 if(!std::is_same<T, Any>())
                 {
                     lastData.ArgumentsDataInfo.back().Data = new T(*arg.ReferenceVar);
+                    lastData.ArgumentsDataInfo.back().CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
                     lastData.ArgumentsDataInfo.back().Destructor = [](void* data) { delete static_cast<T*>(data); };
                     lastData.ArgumentsDataInfo.back().DataSet = true;
                     lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
@@ -460,6 +465,7 @@ namespace SimpleOverride
                 if(!std::is_same<T, Any>())
                 {
                     curArg.ArgData = new T(arg);
+                    curArg.CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
                     curArg.Destructor = [](void* data){ delete static_cast<T*>(data); };
                     curArg.ArgSize = sizeof(T);
                     curArg.ArgTypeHash = typeid(T).hash_code();
@@ -497,6 +503,7 @@ namespace SimpleOverride
             {
                 ArgInfo curArg;
                 curArg.ArgData = const_cast<INTERNAL_FO_PURE_T*>(arg.ReferenceVar);
+                curArg.CopyConstructor = [](void* data) { return data; };
                 curArg.Destructor = [](void* data){ };
                 curArg.ArgSize = sizeof(T);
                 curArg.ArgTypeHash = typeid(T).hash_code();
@@ -727,6 +734,26 @@ namespace SimpleOverride
                 return CheckArguments(argumentsListToCheck, ++argIndex, args...);
             }
             
+            template<typename... Args>
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, Any& arg, Args&... args)
+            {
+                #if FO_LOG_CheckArguments
+                    std::cout <<"CheckArguments index: "<<argIndex<<"\n";
+                #endif
+            
+                if(argIndex >= argumentsListToCheck.size())
+                    return false;
+
+                if(argumentsListToCheck[argIndex].ArgSet)
+                    return false;
+                
+                #if FO_LOG_CheckArguments
+                    std::cout <<"CheckArguments index: "<<argIndex<<" passed\n";
+                #endif
+                
+                return CheckArguments(argumentsListToCheck, ++argIndex, args...);
+            }
+            
             template<typename T, typename... Args>
             inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, NonCopyable<T>& arg, Args&... args)
             {
@@ -755,9 +782,15 @@ namespace SimpleOverride
                         typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
                         typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
                         typename... Args>
-            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, T* arg, Args&... args)
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, T*& arg, Args&... args)
             {
                 return CheckArguments(argumentsListToCheck, argIndex, *arg, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, const T& arg, Args&... args)
+            {
+                return CheckArguments(argumentsListToCheck, argIndex, const_cast<INTERNAL_FO_PURE_T&>(arg), args...);
             }
             
             #define FO_LOG_GetCorrectReturnDataInfo 0
@@ -1023,16 +1056,20 @@ namespace SimpleOverride
                     return;
                 }
             
+                #if FO_LOG_ModifyArgs
+                    std::cout << "modified index: "<<index << std::endl;
+                    std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
+                    std::cout << "typeid(arg).hash_code(): " << typeid(arg).hash_code() <<std::endl;
+                    std::cout << "arg value: "<< arg << std::endl;
+                    std::cout << std::endl;
+                #endif
+
                 if(argsData[index].DataSet)
                 {
                     INTERNAL_FO_PURE_T& pureArg = (INTERNAL_FO_PURE_T&)(arg); 
                     pureArg = *static_cast<INTERNAL_FO_PURE_T*>(argsData[index].Data);
                     #if FO_LOG_ModifyArgs
-                        std::cout << "modified index: "<<index << std::endl;
-                        std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
-                        std::cout << "typeid(arg).hash_code(): " << typeid(arg).hash_code() <<std::endl;
                         std::cout << "argsData[index].DataType: " << argsData[index].DataType <<std::endl;
-                        std::cout << "arg value: "<< arg << std::endl;
                         std::cout << "modified value: "<< (*static_cast<T*>(argsData[index].Data)) << std::endl << std::endl;
                         std::cout << "modified value bytes:" << std::endl;
                         
@@ -1068,15 +1105,114 @@ namespace SimpleOverride
                         typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
                         typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
                         typename... Args>
-            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, T* arg, Args&... args)
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, T*& arg, Args&... args)
             {
                 ModifyArgs(argumentsList, argsData, index, *arg, args...);
+            }
+            
+            template<typename T, typename... Args>
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, const T& arg, Args&... args)
+            {
+                if(!argsData[index].DataSet && !argsData[index].DataActionSet)
+                {
+                    ModifyArgs(argumentsList, argsData, ++index, args...);
+                    return;
+                }
+                
+                #if FO_LOG_ModifyArgs
+                    std::cout << "modified index: "<<index << std::endl;
+                    std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
+                    std::cout << "typeid(arg).hash_code(): " << typeid(arg).hash_code() <<std::endl;
+                    std::cout << "arg value: "<< arg << std::endl;
+                    std::cout << std::endl;
+                #endif
+                
+                if(argsData[index].DataSet)
+                {
+                    std::cout << "[ERROR] Data cannot be set for const arguments" << std::endl;
+                    assert(false);
+                    exit(1);
+                }
+                else
+                {
+                    std::cout << "[WARNING] DataAction is called on const argument, is this intentional?" << std::endl;
+                    argsData[index].DataAction(argumentsList, &((INTERNAL_FO_PURE_T&)(arg)));
+                }
+                
+                ModifyArgs(argumentsList, argsData, ++index, args...);
+            }
+
+            template<typename... Args>
+            inline void ModifyArgs(std::vector<void*>& argumentsList, std::vector<DataInfo>& argsData, int index, const Any& arg, Args&... args)
+            {
+                #if FO_LOG_ModifyArgs
+                    std ::cout <<"Skipping ModifyArgs for index "<<index << " for Any\n";
+                #endif
+                ModifyArgs(argumentsList, argsData, ++index, args...);
             }
 
         //==============================================================================
         //Public facing methods for overriding returns or arguments
         //==============================================================================
         public:
+            inline FunctionOverrides(const FunctionOverrides& other)
+            {
+                *this = other;
+            }
+        
+            inline FunctionOverrides& operator=(const FunctionOverrides& other)
+            {
+                if(this == &other)
+                    return *this;
+            
+                OverrideReturnInfos = other.OverrideReturnInfos;
+                OverrideArgumentsInfos = other.OverrideArgumentsInfos;
+            
+                for(auto it = OverrideReturnInfos.begin(); it != OverrideReturnInfos.end(); it++)
+                {
+                    for(int i = 0; i < it->second.ReturnDatas.size(); i++)
+                    {
+                        DataInfo& curReturnDataInfo = it->second.ReturnDatas[i].ReturnDataInfo;
+                        if(curReturnDataInfo.DataSet)
+                            curReturnDataInfo.Data = curReturnDataInfo.CopyConstructor(curReturnDataInfo.Data);
+                        
+                        for(int j = 0; j < it->second.ReturnDatas[i].ReturnConditionInfo.ArgsCondition.size(); j++)
+                        {
+                            ArgInfo& curArgDataInfo = it->second.ReturnDatas[i].ReturnConditionInfo.ArgsCondition[j];
+                            
+                            if(curArgDataInfo.ArgSet)
+                                curArgDataInfo.ArgData = curArgDataInfo.CopyConstructor(curArgDataInfo.ArgData);
+                        }
+                    }
+                }
+                
+                for(auto it = OverrideArgumentsInfos.begin(); it != OverrideArgumentsInfos.end(); it++)
+                {
+                    for(int i = 0; i < it->second.ArgumentsDatas.size(); i++)
+                    {
+                        for(int j = 0; j < it->second.ArgumentsDatas[i].ArgumentsDataInfo.size(); j++)
+                        {
+                            DataInfo& curArgDataInfo = it->second.ArgumentsDatas[i].ArgumentsDataInfo[j];
+                            
+                            if(curArgDataInfo.DataSet)
+                                curArgDataInfo.Data = curArgDataInfo.CopyConstructor(curArgDataInfo.Data);
+                        }
+                        
+                        for(int j = 0; j < it->second.ArgumentsDatas[i].ArgumentsConditionInfo.ArgsCondition.size(); j++)
+                        {
+                            ArgInfo& curArgDataInfo = it->second.ArgumentsDatas[i].ArgumentsConditionInfo.ArgsCondition[j];
+                            
+                            if(curArgDataInfo.ArgSet)
+                                curArgDataInfo.ArgData = curArgDataInfo.CopyConstructor(curArgDataInfo.ArgData);
+                        }
+                    }
+                }
+                
+                return *this;
+            }
+            
+            FunctionOverrides() = default;
+        
             inline ~FunctionOverrides()
             {
                 for(auto it = OverrideReturnInfos.begin(); it != OverrideReturnInfos.end(); it++)
@@ -1440,18 +1576,20 @@ namespace SimpleOverride
     
     //NOTE: Up to 20 arguments
     #define FO_INTERNAL_EXPAND_IF_EMPTY() ,,,,,,,,,,,,,,,,,,,,
-    #define FO_INTERNAL_TEST_EMPTY(...)   FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ ()
+    #define FO_INTERNAL_ESCAPE_BRACKET(...) __VA_ARGS__ ()
+    #define FO_INTERNAL_TEST_EMPTY(...)   FO_INTERNAL_CAT_ALLOW_GARBAGE(FO_INTERNAL_EXPAND_IF_EMPTY, FO_INTERNAL_ESCAPE_BRACKET __VA_ARGS__ ())
     #define FO_INTERNAL_SELECT_TAG(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _TAG, ...) _TAG
+    #define FO_INTERNAL_CAT_ALLOW_GARBAGE(a, b, ...) a b
     #define FO_INTERNAL_CAT(a, b) a b
     #define FO_INTERNAL_FUNC_CAT(a, b) a ## b
     
-    #define FO_INTERNAL_GET_TAG(...) FO_INTERNAL_CAT( FO_INTERNAL_SELECT_TAG, (FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ (), _EMPTY, \
+    #define FO_INTERNAL_GET_TAG(...) FO_INTERNAL_CAT( FO_INTERNAL_SELECT_TAG, (FO_INTERNAL_TEST_EMPTY(__VA_ARGS__), _EMPTY, \
                                                             _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY,\
                                                             _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY, _NOT_EMPTY) )
     
     //Debug
-    //#define FO_INTERNAL_GET_TAG(...) FO_INTERNAL_CAT( FO_INTERNAL_SELECT_TAG, ( FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ (), _0, \
-    //                                                    _20, _19, _18, _17, _16, _15, _14, _13, _12, _11,\
+    //#define FO_INTERNAL_GET_TAG(...) FO_INTERNAL_CAT( FO_INTERNAL_SELECT_TAG, ( FO_INTERNAL_EXPAND_IF_EMPTY __VA_ARGS__ (), _0,
+    //                                                    _20, _19, _18, _17, _16, _15, _14, _13, _12, _11,
     //                                                    _10, _9, _8, _7, _6, _5, _4, _3, _2, _1) )
     
     #define FO_INTERNAL_APPEND_ARGS(...) FO_INTERNAL_CAT( FO_INTERNAL_FUNC_CAT, (FO_INTERNAL_APPEND_ARGS, FO_INTERNAL_GET_TAG(__VA_ARGS__) (__VA_ARGS__)) )
