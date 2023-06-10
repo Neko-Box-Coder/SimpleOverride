@@ -1592,8 +1592,15 @@ namespace SimpleOverride
     //                                                    _20, _19, _18, _17, _16, _15, _14, _13, _12, _11,
     //                                                    _10, _9, _8, _7, _6, _5, _4, _3, _2, _1) )
     
-    #define FO_INTERNAL_APPEND_ARGS(...) FO_INTERNAL_CAT( FO_INTERNAL_FUNC_CAT, (FO_INTERNAL_APPEND_ARGS, FO_INTERNAL_GET_TAG(__VA_ARGS__) (__VA_ARGS__)) )
-    
+    //MSVC workaround: https://stackoverflow.com/questions/48710758/how-to-fix-variadic-macro-related-issues-with-macro-overloading-in-msvc-mic
+
+    #ifndef _MSC_VER
+        #define FO_INTERNAL_APPEND_ARGS(...) FO_INTERNAL_CAT( FO_INTERNAL_FUNC_CAT, (FO_INTERNAL_APPEND_ARGS, FO_INTERNAL_GET_TAG(__VA_ARGS__) (__VA_ARGS__)) )
+    #else
+        #define FO_INTERNAL_VA_ARGS_FIX( macro, args ) macro args
+        #define FO_INTERNAL_APPEND_ARGS(...) FO_INTERNAL_VA_ARGS_FIX( FO_INTERNAL_CAT, ( FO_INTERNAL_FUNC_CAT, (FO_INTERNAL_APPEND_ARGS, FO_INTERNAL_GET_TAG(__VA_ARGS__) (__VA_ARGS__)) ) )
+    #endif
+
     #define FO_INTERNAL_STR(x) #x
     
     
