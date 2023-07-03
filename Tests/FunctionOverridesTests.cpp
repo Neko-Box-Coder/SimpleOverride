@@ -164,7 +164,7 @@ int main()
     ssTEST_SET_UP
     {
         OverrideObj = SimpleOverride::FunctionOverrides();
-    }
+    };
     
     ssTEST("Returns Test")
     {
@@ -192,7 +192,7 @@ int main()
                     .Times(3);
 
         ssTEST_OUTPUT_ASSERT("Missing Returns", TestFuncWithoutArgs() == -1);
-    }
+    };
     
     ssTEST("Arguments Test")
     {
@@ -252,7 +252,7 @@ int main()
                     .Times(3);
 
         ssTEST_OUTPUT_ASSERT("Missing Arguments", testFloat == 1.f && testString == "");
-    }
+    };
     
     ssTEST("Times Test")
     {
@@ -293,7 +293,7 @@ int main()
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testFloats[0] == 3.f && testFloats[1] == 3.f && testFloats[2] == 1.f &&
                                         testStrings[0] == "Test" && testStrings[1] == "Test" && testStrings[2] == "");
-    }
+    };
 
     ssTEST("WhenCalledWith Test")
     {
@@ -340,7 +340,7 @@ int main()
         TestFuncWithArgsToSet(1, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testFloat == 3.f && testString == "Test");
-    }
+    };
     
     ssTEST("If Test")
     {
@@ -378,7 +378,7 @@ int main()
         TestFuncWithArgsToSet(1, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testFloat == 3.f && testString == "Test");
-    }
+    };
     
     ssTEST("WhenCalledExpectedly_Do Test")
     {
@@ -425,7 +425,7 @@ int main()
         TestFuncWithArgsToSet(1, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", calledCorrectly);
-    }
+    };
     
     ssTEST("Otherwise_Do Test")
     {
@@ -471,7 +471,7 @@ int main()
         std::string testString = "Test2";
         TestFuncWithArgsToSet(1, &testFloat, testString);
         ssTEST_OUTPUT_ASSERT("SetArgs", calledIncorrectly && testString == "Test2");
-    }
+    };
     
     ssTEST("Complex Test")
     {
@@ -514,7 +514,7 @@ int main()
                     .WhenCalledWith(FO_ANY, FO_ANY);
         
         ssTEST_OUTPUT_ASSERT("Return with Action",  testClass.ComplexMemberFunction(callCharComplex, callIntComplex) == 6);
-    }
+    };
     
     ssTEST("Const Test")
     {
@@ -539,7 +539,7 @@ int main()
         TestFuncWithConstArgsAndArgsToSet(1, 2.f, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testString == "Test");
-    }
+    };
     
     ssTEST("Void* Test")
     {
@@ -551,7 +551,7 @@ int main()
                     .WhenCalledWith(3, (void*)&testPtr2);
         
         ssTEST_OUTPUT_ASSERT(TestFuncWIthVoidPointer(3, &testPtr2) == &returnPtr);
-    }
+    };
     
     ssTEST("NonCopyable NonComparable Test")
     {
