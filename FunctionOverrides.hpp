@@ -134,6 +134,7 @@ namespace SimpleOverride
     //Method Chaining Classes
     //==============================================================================
     //Common proxy class for method chaining
+    template<typename DeriveType>
     class FunctionOverridesCommonProxy
     {
         friend class FunctionOverrides;
@@ -150,20 +151,20 @@ namespace SimpleOverride
                 FunctionProxyType(functionProxyType)
             {}
 
-            FunctionOverridesCommonProxy Times(int times);
+            DeriveType& Times(int times);
             
             template<typename... Args>
-            FunctionOverridesCommonProxy WhenCalledWith(Args... args);
+            DeriveType& WhenCalledWith(Args... args);
             
-            FunctionOverridesCommonProxy If(std::function<bool(std::vector<void*>& args)> condition);
+            DeriveType& If(std::function<bool(std::vector<void*>& args)> condition);
 
-            FunctionOverridesCommonProxy Otherwise_Do(std::function<void(std::vector<void*>& args)> action);
+            DeriveType& Otherwise_Do(std::function<void(std::vector<void*>& args)> action);
 
-            FunctionOverridesCommonProxy WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action);
+            DeriveType& WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action);
     };
     
     //Override return proxy class for method chaining
-    class FunctionOverridesReturnProxy : public FunctionOverridesCommonProxy
+    class FunctionOverridesReturnProxy : public FunctionOverridesCommonProxy<FunctionOverridesReturnProxy>
     {
         public:
             FunctionOverridesReturnProxy(std::string functionSignatureName, FunctionOverrides& functionOverridesObj, ProxyType functionProxyType) : 
@@ -171,14 +172,14 @@ namespace SimpleOverride
             {}
             
             template<typename T>
-            FunctionOverridesReturnProxy ReturnsByAction(std::function<void(std::vector<void*>& args, void* out)> returnAction);
+            FunctionOverridesReturnProxy& ReturnsByAction(std::function<void(std::vector<void*>& args, void* out)> returnAction);
             
             template<typename T>
-            FunctionOverridesReturnProxy Returns(T returnData);
+            FunctionOverridesReturnProxy& Returns(T returnData);
     };
     
     //Override arguments proxy class for method chaining
-    class FunctionOverridesArgumentsProxy : public FunctionOverridesCommonProxy
+    class FunctionOverridesArgumentsProxy : public FunctionOverridesCommonProxy<FunctionOverridesArgumentsProxy>
     {
         public:
             FunctionOverridesArgumentsProxy(std::string functionSignatureName, FunctionOverrides& functionOverridesObj, ProxyType functionProxyType) : 
@@ -186,10 +187,10 @@ namespace SimpleOverride
             {}
             
             template<typename T>
-            FunctionOverridesArgumentsProxy SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction);
+            FunctionOverridesArgumentsProxy& SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction);
             
             template<typename... Args>
-            FunctionOverridesArgumentsProxy SetArgs(Args... args);
+            FunctionOverridesArgumentsProxy& SetArgs(Args... args);
     };
 
     //==============================================================================
@@ -197,7 +198,8 @@ namespace SimpleOverride
     //==============================================================================
     class FunctionOverrides
     {
-        friend class FunctionOverridesCommonProxy;
+        friend class FunctionOverridesCommonProxy<FunctionOverridesReturnProxy>;
+        friend class FunctionOverridesCommonProxy<FunctionOverridesArgumentsProxy>;
         friend class FunctionOverridesReturnProxy;
         friend class FunctionOverridesArgumentsProxy;
 
@@ -272,7 +274,7 @@ namespace SimpleOverride
             //Methods for setting return data
             //------------------------------------------------------------------------------
             template<typename T>
-            inline FunctionOverridesReturnProxy ReturnsByAction(FunctionOverridesReturnProxy proxy, 
+            inline FunctionOverridesReturnProxy& ReturnsByAction(FunctionOverridesReturnProxy& proxy, 
                                                                 std::function<void(std::vector<void*>& args, void* out)> returnAction)
             {
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
@@ -284,7 +286,7 @@ namespace SimpleOverride
             }
         
             template<typename T>
-            inline FunctionOverridesReturnProxy Returns(FunctionOverridesReturnProxy proxy, T returnData)
+            inline FunctionOverridesReturnProxy& Returns(FunctionOverridesReturnProxy& proxy, T returnData)
             {
                 ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
                 lastData.ReturnDataInfo.Data = new T(returnData);
@@ -299,7 +301,7 @@ namespace SimpleOverride
             //Methods for setting arguments data
             //------------------------------------------------------------------------------
             template<typename T>
-            inline FunctionOverridesArgumentsProxy SetArgsByAction( FunctionOverridesArgumentsProxy proxy,
+            inline FunctionOverridesArgumentsProxy& SetArgsByAction( FunctionOverridesArgumentsProxy& proxy,
                                                                     std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
             {
                 ArgumentsData& lastData = OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
@@ -312,7 +314,7 @@ namespace SimpleOverride
                 return proxy;
             }
             
-            inline FunctionOverridesArgumentsProxy SetArgs(FunctionOverridesArgumentsProxy proxy)
+            inline FunctionOverridesArgumentsProxy& SetArgs(FunctionOverridesArgumentsProxy& proxy)
             {
                 return proxy;
             }
@@ -332,7 +334,7 @@ namespace SimpleOverride
             #endif
             
             template<typename T, typename... Args>
-            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+            inline FunctionOverridesArgumentsProxy& SetArgs( FunctionOverridesArgumentsProxy& proxy,
                                                             T arg, Args... args)
             {
                 ArgumentsData& lastData = OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
@@ -365,7 +367,7 @@ namespace SimpleOverride
             }
             
             template<typename T, typename... Args>
-            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+            inline FunctionOverridesArgumentsProxy& SetArgs( FunctionOverridesArgumentsProxy& proxy,
                                                             NonComparable<T> arg, Args... args)
             {
                 ArgumentsData& lastData = OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
@@ -401,7 +403,7 @@ namespace SimpleOverride
             struct FO_ASSERT_FALSE : std::false_type { };
             
             template<typename T, typename... Args>
-            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+            inline FunctionOverridesArgumentsProxy& SetArgs( FunctionOverridesArgumentsProxy& proxy,
                                                             NonCopyable<T> arg, Args... args)
             {
                 static_assert(FO_ASSERT_FALSE<T>::value, "You can't pass non copyable argument to be set");
@@ -409,7 +411,7 @@ namespace SimpleOverride
             }
             
             template<typename T, typename... Args>
-            inline FunctionOverridesArgumentsProxy SetArgs( FunctionOverridesArgumentsProxy proxy,
+            inline FunctionOverridesArgumentsProxy& SetArgs( FunctionOverridesArgumentsProxy& proxy,
                                                             NonComparableCopyable<T> arg, Args... args)
             {
                 static_assert(FO_ASSERT_FALSE<T>::value, "You can't pass non copyable argument to be set");
@@ -420,7 +422,8 @@ namespace SimpleOverride
             //------------------------------------------------------------------------------
             //Methods for setting requirements
             //------------------------------------------------------------------------------
-            inline FunctionOverridesCommonProxy Times(FunctionOverridesCommonProxy proxy, int times)
+            template<typename DeriveType>
+            inline DeriveType& Times(FunctionOverridesCommonProxy<DeriveType>& proxy, int times)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -436,30 +439,31 @@ namespace SimpleOverride
                         exit(1);
                         break;
                 }
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
             
-            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy)
+            template<typename DeriveType>
+            inline DeriveType& WhenCalledWith(FunctionOverridesCommonProxy<DeriveType>& proxy)
             {
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
 
-            template<typename T, typename... Args>
-            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, NonComparable<T> arg, Args... args)
+            template<typename DeriveType, typename T, typename... Args>
+            inline DeriveType& WhenCalledWith(FunctionOverridesCommonProxy<DeriveType>& proxy, NonComparable<T> arg, Args... args)
             {
                 static_assert(FO_ASSERT_FALSE<T>::value, "You can't check non comparable variable");
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
             
-            template<typename T, typename... Args>
-            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, NonComparableCopyable<T> arg, Args... args)
+            template<typename DeriveType, typename T, typename... Args>
+            inline DeriveType& WhenCalledWith(FunctionOverridesCommonProxy<DeriveType>& proxy, NonComparableCopyable<T> arg, Args... args)
             {
                 static_assert(FO_ASSERT_FALSE<T>::value, "You can't check non comparable variable");
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
 
-            template<typename T, typename... Args>
-            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, T arg, Args... args)
+            template<typename DeriveType, typename T, typename... Args>
+            inline DeriveType& WhenCalledWith(FunctionOverridesCommonProxy<DeriveType>& proxy, T arg, Args... args)
             {
                 ArgInfo curArg;
                 if(!std::is_same<T, Any>())
@@ -498,8 +502,8 @@ namespace SimpleOverride
                 return WhenCalledWith(proxy, args...);
             }
             
-            template<typename T, typename... Args>
-            inline FunctionOverridesCommonProxy WhenCalledWith(FunctionOverridesCommonProxy proxy, NonCopyable<T> arg, Args... args)
+            template<typename DeriveType, typename T, typename... Args>
+            inline DeriveType& WhenCalledWith(FunctionOverridesCommonProxy<DeriveType>& proxy, NonCopyable<T> arg, Args... args)
             {
                 ArgInfo curArg;
                 curArg.ArgData = const_cast<INTERNAL_FO_PURE_T*>(arg.ReferenceVar);
@@ -535,8 +539,9 @@ namespace SimpleOverride
                 return WhenCalledWith(proxy, args...);
             }
             
-            inline FunctionOverridesCommonProxy If( FunctionOverridesCommonProxy proxy, 
-                                                    std::function<bool(std::vector<void*>& args)> condition)
+            template<typename DeriveType>
+            inline DeriveType& If(   FunctionOverridesCommonProxy<DeriveType>& proxy, 
+                                    std::function<bool(std::vector<void*>& args)> condition)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -555,11 +560,12 @@ namespace SimpleOverride
                         break;
                 }
             
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
             
-            inline FunctionOverridesCommonProxy Otherwise_Do(   FunctionOverridesCommonProxy proxy, 
-                                                                std::function<void(std::vector<void*>& args)> action)
+            template<typename DeriveType>
+            inline DeriveType& Otherwise_Do( FunctionOverridesCommonProxy<DeriveType>& proxy, 
+                                            std::function<void(std::vector<void*>& args)> action)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -578,11 +584,12 @@ namespace SimpleOverride
                         break;
                 }
                 
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
             
-            inline FunctionOverridesCommonProxy WhenCalledExpectedly_Do(FunctionOverridesCommonProxy proxy, 
-                                                                        std::function<void(std::vector<void*>& args)> action)
+            template<typename DeriveType>
+            inline DeriveType& WhenCalledExpectedly_Do(  FunctionOverridesCommonProxy<DeriveType>& proxy, 
+                                                        std::function<void(std::vector<void*>& args)> action)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -601,7 +608,7 @@ namespace SimpleOverride
                         break;
                 }
     
-                return proxy;
+                return *static_cast<DeriveType*>(&proxy);
             }
 
         //==============================================================================
@@ -1444,54 +1451,63 @@ namespace SimpleOverride
     //==============================================================================
     using ReturnProxy = FunctionOverridesReturnProxy;
     using ArgsProxy = FunctionOverridesArgumentsProxy;
-    using CommonProxy = FunctionOverridesCommonProxy;
+    
+    //NOTE: Can't do using as this will evaluate the DeriveType which contains FunctionOverridesCommonProxy which has functions not defined yet.
+    //      See https://stackoverflow.com/questions/35428422/crtp-accessing-incomplete-type-members
+    //template<typename DeriveType>
+    //using CommonProxy = FunctionOverridesCommonProxy<DeriveType>;
 
     template<typename T>
-    inline ReturnProxy ReturnProxy::ReturnsByAction(std::function<void(std::vector<void*>& args, void* out)> returnAction)
+    inline ReturnProxy& ReturnProxy::ReturnsByAction(std::function<void(std::vector<void*>& args, void* out)> returnAction)
     {
         return FunctionOverridesObj.ReturnsByAction<T>(*this, returnAction);
     }
 
     template<typename T>
-    inline ReturnProxy ReturnProxy::Returns(T returnData)
+    inline ReturnProxy& ReturnProxy::Returns(T returnData)
     {
         return FunctionOverridesObj.Returns(*this, returnData);
     }
     
     template<typename T>
-    inline ArgsProxy ArgsProxy::SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
+    inline ArgsProxy& ArgsProxy::SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
     {
         return FunctionOverridesObj.SetArgsByAction<T>(*this, setArgsAction);
     }
             
     template<typename... Args>
-    inline ArgsProxy ArgsProxy::SetArgs(Args... args)
+    inline ArgsProxy& ArgsProxy::SetArgs(Args... args)
     {
         return FunctionOverridesObj.SetArgs(*this, args...);
     }
     
-    inline CommonProxy CommonProxy::Times(int times)
+    template<typename DeriveType>
+    inline DeriveType& FunctionOverridesCommonProxy<DeriveType>::Times(int times)
     {
         return FunctionOverridesObj.Times(*this, times);
     }
     
+    template<typename DeriveType>
     template<typename... Args>
-    inline CommonProxy CommonProxy::WhenCalledWith(Args... args)
+    inline DeriveType& FunctionOverridesCommonProxy<DeriveType>::WhenCalledWith(Args... args)
     {
         return FunctionOverridesObj.WhenCalledWith(*this, args...);
     }
     
-    inline CommonProxy CommonProxy::If(std::function<bool(std::vector<void*>& args)> condition)
+    template<typename DeriveType>
+    inline DeriveType& FunctionOverridesCommonProxy<DeriveType>::If(std::function<bool(std::vector<void*>& args)> condition)
     {
         return FunctionOverridesObj.If(*this, condition);
     }
     
-    inline CommonProxy CommonProxy::Otherwise_Do(std::function<void(std::vector<void*>& args)> action)
+    template<typename DeriveType>
+    inline DeriveType& FunctionOverridesCommonProxy<DeriveType>::Otherwise_Do(std::function<void(std::vector<void*>& args)> action)
     {
         return FunctionOverridesObj.Otherwise_Do(*this, action);
     }
     
-    inline CommonProxy CommonProxy::WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action)
+    template<typename DeriveType>
+    inline DeriveType& FunctionOverridesCommonProxy<DeriveType>::WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action)
     {
         return FunctionOverridesObj.WhenCalledExpectedly_Do(*this, action);
     }

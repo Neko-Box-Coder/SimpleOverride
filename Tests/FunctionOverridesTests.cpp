@@ -156,6 +156,16 @@ void TestFuncWithNonComparableArg(int testArg, NonComparableTestClass& nonCompar
                             (FO_NonComparable<NonComparableTestClass>&)nonComparableArg);
 }
 
+template<typename T>
+int TemplateFunctionTest(T testArg)
+{
+    FO_RETURN_IF_FOUND( OverrideObj, 
+                        template<typename T> int TemplateFunctionTest(T),
+                        int,
+                        testArg);
+
+    return -1;
+}
 
 int main()
 {
@@ -627,6 +637,21 @@ int main()
         TestFuncWithNonComparableArg(2, testClass);
         
         ssTEST_OUTPUT_ASSERT(testClass.A == setClass.A && correctPtr);
+    };
+    
+    ssTEST("Template Function Test")
+    {
+        OverrideObj .OverrideReturns(template<typename T>int TemplateFunctionTest(T))
+                    .WhenCalledWith(3)
+                    .Returns(0);
+        
+        int result = TemplateFunctionTest(3);
+        
+        ssTEST_OUTPUT_ASSERT(result == 0);
+        
+        result = TemplateFunctionTest("test");
+        
+        ssTEST_OUTPUT_ASSERT("Different argument type", result == -1);
     };
 
     ssTEST_END();
