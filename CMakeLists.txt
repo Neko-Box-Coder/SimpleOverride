@@ -20,10 +20,10 @@ set(SIMPLE_OVERRIDE_BUILD_EXAMPLE "ON" CACHE BOOL "Build tests for simple overri
 
 add_library(SimpleOverride INTERFACE)
 target_include_directories(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
-target_sources(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/FunctionOverrides.hpp")
+target_sources(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/SimpleOverride.hpp")
 
 if(SIMPLE_OVERRIDE_BUILD_TEST)
-    add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/FunctionOverridesTests.cpp")
+    add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/SimpleOverrideTests.cpp")
     target_link_libraries(SimpleOverrideTest PUBLIC SimpleOverride)
     
     if(NOT TARGET ssTest)
