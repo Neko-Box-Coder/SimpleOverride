@@ -1645,13 +1645,6 @@ inline void ClearAllOverrideReturns()\
     OverrideObjName.ClearAllOverrideReturns();\
 }
 
-//#define OverrideArgs(functionSig) Internal_OverrideArgs(ProcessFunctionSig(SO_INTERNAL_STR(functionSig)))
-//#define ClearOverrideArgs(functionSig) Internal_ClearOverrideArgs(ProcessFunctionSig(SO_INTERNAL_STR(functionSig)))
-//#define CheckOverrideAndSetArgs(functionSig, ...)\
-//        Internal_CheckOverrideAndSetArgs(ProcessFunctionSig(SO_INTERNAL_STR(functionSig)) SO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
-
-
-
 const SimpleOverride::Any SO_ANY;
 const SimpleOverride::Any SO_DONT_SET;
 
