@@ -1,9 +1,10 @@
 #include "SimpleOverride.hpp"
 #include "ssTest.hpp"
 
+
 namespace 
 {
-    SimpleOverride OverrideObj;
+    SimpleOverride::Overrider OverrideObj;
 }
 
 int TestFuncWithoutArgs()
@@ -174,7 +175,7 @@ int main()
     
     ssTEST_SET_UP
     {
-        OverrideObj = SimpleOverride();
+        OverrideObj = SimpleOverride::Overrider();
     };
     
     ssTEST("Returns Test")

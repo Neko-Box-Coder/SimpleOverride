@@ -17,10 +17,18 @@ project(SimpleOverrideProject)
 # ==========================================================
 set(SIMPLE_OVERRIDE_BUILD_TEST "OFF" CACHE BOOL "Build tests for simple override")
 set(SIMPLE_OVERRIDE_BUILD_EXAMPLE "ON" CACHE BOOL "Build tests for simple override")
+set(SIMPLE_OVERRIDE_USE_SINGLE_HEADER "ON" CACHE BOOL "Use single header version instead")
+
 
 add_library(SimpleOverride INTERFACE)
-target_include_directories(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
-target_sources(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/SimpleOverride.hpp")
+
+if(SIMPLE_OVERRIDE_USE_SINGLE_HEADER)
+    target_include_directories(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/Include_SingleHeader")
+    #target_sources(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/SimpleOverride.hpp")
+else()
+    target_include_directories(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/Include_MultiHeaders")
+    #target_sources(SimpleOverride INTERFACE "${CMAKE_CURRENT_LIST_DIR}/Include/SimpleOverride.hpp")
+endif()
 
 if(SIMPLE_OVERRIDE_BUILD_TEST)
     add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/SimpleOverrideTests.cpp")

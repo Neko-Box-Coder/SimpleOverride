@@ -1,6 +1,7 @@
+//#include "SimpleOverride.hpp"
 #include "SimpleOverride.hpp"
 
-SimpleOverride Overrider;
+SimpleOverride::Overrider Overrider;
 
 int ChangeReturnValue(int a, float* b)
 {
