@@ -31,14 +31,14 @@ else()
 endif()
 
 if(SIMPLE_OVERRIDE_BUILD_TEST)
-    add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/SimpleOverrideTests.cpp")
-    target_link_libraries(SimpleOverrideTest PUBLIC SimpleOverride)
-    
     if(NOT TARGET ssTest)
         add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/External/ssTest" "${CMAKE_CURRENT_BINARY_DIR}/ssTest")
     endif()
+    
+    #add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/SimpleOverrideTests.cpp")
+    add_executable(ModifyReturnsTests "${CMAKE_CURRENT_LIST_DIR}/Tests/ModifyReturnsTests.cpp")
+    target_link_libraries(ModifyReturnsTests PUBLIC SimpleOverride ssTest)
 
-    target_link_libraries(SimpleOverrideTest PUBLIC ssTest)
 endif()
 
 if(SIMPLE_OVERRIDE_BUILD_EXAMPLE)

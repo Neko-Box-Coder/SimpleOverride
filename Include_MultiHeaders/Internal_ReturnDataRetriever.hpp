@@ -4,7 +4,8 @@
 #include "./Internal_OverrideReturnDataInfo.hpp"
 #include "./PureType.hpp"
 #include "./Internal_ArgsValuesAppender.hpp"
-#include "./Internal_ArgsChecker.hpp"
+#include "./Internal_ArgsTypesChecker.hpp"
+#include "./Internal_ArgsValuesChecker.hpp"
 
 #include <cassert>
 #include <string>
@@ -21,7 +22,8 @@ namespace SimpleOverride
         protected:
             ReturnInfosType& OverrideReturnInfos;
             Internal_ArgsValuesAppender& ArgsValuesAppender;
-            Internal_ArgsChecker ArgsChecker;
+            Internal_ArgsTypesChecker& ArgsTypesChecker;
+            Internal_ArgsValuesChecker& ArgsValuesChecker;
         
             #define SO_LOG_GetCorrectReturnDataInfo 0
 
@@ -52,32 +54,58 @@ namespace SimpleOverride
                         std::cout << "Checking return data["<<i<<"]\n";
                     #endif
 
-                    //Check return data exist
-                    if( !curReturnDatas[i].ReturnDataInfo.DataSet && 
-                        !curReturnDatas[i].ReturnDataInfo.DataActionSet)
+                    //Check override return data exist
+                    if( curReturnDatas[i].ReturnDataInfo.DataSet ||
+                        curReturnDatas[i].ReturnDataInfo.DataActionSet)
                     {
                         #if SO_LOG_GetCorrectReturnDataInfo
                             std::cout << "Failed at return data exist\n";
                         #endif
-                        if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
-                        continue;
+                        
+                        //Check return type match
+                        if(curReturnDatas[i].ReturnDataInfo.DataType != 
+                            typeid(INTERNAL_SO_PURE_T).hash_code())
+                        {
+                            #if SO_LOG_GetCorrectReturnDataInfo
+                                std::cout << "Failed at return type\n";
+                            #endif
+                            
+                            continue;
+                        }
                     }
-                
-                    //Check return type
-                    if(curReturnDatas[i].ReturnDataInfo.DataType != 
-                        typeid(INTERNAL_SO_PURE_T).hash_code())
+                    
+                    //Check parameter condition types/count match
+                    if( !curReturnDatas[i].ReturnConditionInfo.ArgsCondition.empty() && 
+                        !ArgsTypesChecker.CheckArgumentsTypes(  curReturnDatas[i]   .ReturnConditionInfo
+                                                                                    .ArgsCondition, 
+                                                                0, 
+                                                                args...))
                     {
                         #if SO_LOG_GetCorrectReturnDataInfo
-                            std::cout << "Failed at return type\n";
+                            std::cout << "Failed at Check parameter\n";
+                        #endif
+                        continue;
+                    }
+                    
+                    
+                    //Check parameter values
+                    if( !curReturnDatas[i].ReturnConditionInfo.ArgsCondition.empty() && 
+                        !ArgsTypesChecker.CheckArgumentsTypes(  curReturnDatas[i]   .ReturnConditionInfo
+                                                                                    .ArgsCondition, 
+                                                                0, 
+                                                                args...))
+                    {
+                        #if SO_LOG_GetCorrectReturnDataInfo
+                            std::cout << "Failed at Check parameter\n";
                         #endif
                         if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
                             curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
                         
                         continue;
                     }
-
-                    //Check condition
+                    
+                    
+                    //Check condition lambda
                     if( curReturnDatas[i].ReturnConditionInfo.DataConditionSet && 
                         !curReturnDatas[i].ReturnConditionInfo.DataCondition(argumentsList))
                     {
@@ -89,23 +117,7 @@ namespace SimpleOverride
                         
                         continue;
                     }
-
-                    //Check parameter
-                    if( !curReturnDatas[i].ReturnConditionInfo.ArgsCondition.empty() && 
-                        !ArgsChecker.CheckArguments(curReturnDatas[i]   .ReturnConditionInfo
-                                                                        .ArgsCondition, 
-                                                    0, 
-                                                    args...))
-                    {
-                        #if SO_LOG_GetCorrectReturnDataInfo
-                            std::cout << "Failed at Check parameter\n";
-                        #endif
-                        if(curReturnDatas[i].ReturnActionInfo.OtherwiseActionSet)
-                            curReturnDatas[i].ReturnActionInfo.OtherwiseAction(argumentsList);
-
-                        continue;
-                    }
-                        
+                    
                     //Check times
                     if( curReturnDatas[i].ReturnConditionInfo.Times >= 0 && 
                         curReturnDatas[i].ReturnConditionInfo.CalledTimes >= 
@@ -127,19 +139,19 @@ namespace SimpleOverride
                     break;
                 }
                 
-                //Deallocating argumentsList
-                //for(int i = 0; i < argumentsList.size(); i++)
-                //    argumentsList[i].Destructor(argumentsList[i].ArgData);
-                
+                //NOTE: We don't need to deallocate argumentsList and derefArgumentsList 
+                //  because they are just pointers to arg values and type info from the caller
                 return returnIndex;
             }
         public:
             inline Internal_ReturnDataRetriever(ReturnInfosType& overrideReturnInfos,
                                                 Internal_ArgsValuesAppender& argsValuesAppender,
-                                                Internal_ArgsChecker& argsChecker) : 
+                                                Internal_ArgsTypesChecker& argsTypesChecker,
+                                                Internal_ArgsValuesChecker& argsValuesChecker) : 
                 OverrideReturnInfos(overrideReturnInfos),
                 ArgsValuesAppender(argsValuesAppender),
-                ArgsChecker(argsChecker)
+                ArgsTypesChecker(argsTypesChecker),
+                ArgsValuesChecker(argsValuesChecker)
             {}
     };
 }

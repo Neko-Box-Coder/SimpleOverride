@@ -5,6 +5,11 @@
 #include "./Internal_ReturnData.hpp"
 #include "./Internal_OverrideReturnDataInfo.hpp"
 #include "./ProxiesDeclarations.hpp"
+#include "./NonCopyable.hpp"
+#include "./StaticAssertFalse.hpp"
+#include "./NonComparableCopyable.hpp"
+#include "./NonComparable.hpp"
+#include "./Any.hpp"
 
 #include <unordered_map>
 
@@ -38,12 +43,40 @@ namespace SimpleOverride
             template<typename T>
             inline ReturnProxy& Returns(ReturnProxy& proxy, T returnData)
             {
-                Internal_ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
-                lastData.ReturnDataInfo.Data = new T(returnData);
-                lastData.ReturnDataInfo.CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
-                lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
-                lastData.ReturnDataInfo.DataSet = true;
-                lastData.ReturnDataInfo.DataType = typeid(T).hash_code();
+                if(!std::is_same<T, Any>())
+                {
+                    Internal_ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
+                    lastData.ReturnDataInfo.Data = new T(returnData);
+                    lastData.ReturnDataInfo.CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
+                    lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
+                    lastData.ReturnDataInfo.DataSet = true;
+                    lastData.ReturnDataInfo.DataType = typeid(T).hash_code();
+                }
+                
+                return proxy;
+            }
+            
+            template<typename T>
+            inline ReturnProxy& Returns(ReturnProxy& proxy, NonComparable<T> returnData)
+            {
+                return Returns(proxy, *returnData.ReferenceVar);
+            }
+            
+            template<typename T>
+            inline ReturnProxy& Returns(ReturnProxy& proxy, NonCopyable<T> returnData)
+            {
+                static_assert(  SO_ASSERT_FALSE<T>::value, 
+                                "You can't pass non copyable value to be returned");
+                
+                return proxy;
+            }
+        
+            template<typename T>
+            inline ReturnProxy& Returns(ReturnProxy& proxy, NonComparableCopyable<T> returnData)
+            {
+                static_assert(  SO_ASSERT_FALSE<T>::value, 
+                                "You can't pass non copyable value to be returned");
+                
                 return proxy;
             }
         

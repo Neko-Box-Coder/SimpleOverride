@@ -4,7 +4,8 @@
 #include "./Internal_ArgsTypeInfoAppender.hpp"
 #include "./Internal_ArgsValuesAppender.hpp"
 #include "./Internal_OverrideArgumentInfo.hpp"
-#include "./Internal_ArgsChecker.hpp"
+#include "./Internal_ArgsTypesChecker.hpp"
+#include "./Internal_ArgsValuesChecker.hpp"
 
 #include <cassert>
 #include <string>
@@ -22,7 +23,8 @@ namespace SimpleOverride
             ArgumentInfosType& OverrideArgumentsInfos;
             Internal_ArgsValuesAppender& ArgsValuesAppender;
             Internal_ArgsTypeInfoAppender& ArgsTypeInfoAppender;
-            Internal_ArgsChecker& ArgsChecker;
+            Internal_ArgsTypesChecker& ArgsTypesChecker;
+            Internal_ArgsValuesChecker& ArgsValuesChecker;
             
             #define SO_LOG_GetCorrectArgumentsDataInfo 0
 
@@ -55,24 +57,24 @@ namespace SimpleOverride
                     #if SO_LOG_GetCorrectArgumentsDataInfo
                         std::cout << "Checking arg data["<<i<<"]\n";
                     #endif
-                
-                    //Check set argument data exist
+                    
+                    //Check set argument data counts match
                     if(curArgData[i].ArgumentsDataInfo.size() != deRefArgumentsList.size())
                     {
                         #if SO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check set argument data exist\n";
                         #endif
-                        if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
-                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
-                        
                         continue;
                     }
-                
-                    //Check arguments types
+                    
+                    //Check override argument data types match
                     bool argumentTypeFailed = false;
                     for(int j = 0; j < curArgData[i].ArgumentsDataInfo.size(); j++)
                     {
-                        if( curArgData[i].ArgumentsDataInfo[j].DataSet &&
+                        bool overrideArg =  curArgData[i].ArgumentsDataInfo[j].DataSet || 
+                                            curArgData[i].ArgumentsDataInfo[j].DataActionSet;
+                        
+                        if( overrideArg && 
                             curArgData[i].ArgumentsDataInfo[j].DataType != 
                                 deRefArgumentsList[j].ArgTypeHash)
                         {
@@ -80,42 +82,55 @@ namespace SimpleOverride
                                 std::cout << "Failed at Check arguments types\n";
                             #endif
                             argumentTypeFailed = true;
-                            break;;
+                            break;
                         }
                     }
                     if(argumentTypeFailed)
+                        continue;
+                    
+                    //Check parameter condition types/count match
+                    if( !curArgData[i].ArgumentsConditionInfo.ArgsCondition.empty() && 
+                        !ArgsTypesChecker.CheckArgumentsTypes(  curArgData[i]   .ArgumentsConditionInfo
+                                                                                .ArgsCondition, 
+                                                                0, 
+                                                                args...))
                     {
-                        if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
-                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
-
+                        #if SO_LOG_GetCorrectArgumentsDataInfo
+                            std::cout << "Failed at Check parameter\n";
+                        #endif
                         continue;
                     }
-
-                    //Check condition
+                    
+                    //Check parameter values
+                    if( !curArgData[i].ArgumentsConditionInfo.ArgsCondition.empty() && 
+                        !ArgsValuesChecker.CheckArgumentsValues(curArgData[i]   .ArgumentsConditionInfo
+                                                                                .ArgsCondition, 
+                                                                0, 
+                                                                args...))
+                    {
+                        #if SO_LOG_GetCorrectArgumentsDataInfo
+                            std::cout << "Failed at Check parameter\n";
+                        #endif
+                        
+                        if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
+                            curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
+                        
+                        continue;
+                    }
+                    
+                    //Check condition lambda
                     if( curArgData[i].ArgumentsConditionInfo.DataConditionSet && 
                         !curArgData[i].ArgumentsConditionInfo.DataCondition(argumentsList))
                     {
                         #if SO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check condition\n";
                         #endif
-                        continue;
-                    }
-
-                    //Check parameter
-                    if( !curArgData[i].ArgumentsConditionInfo.ArgsCondition.empty() && 
-                        !ArgsChecker.CheckArguments(curArgData[i]   .ArgumentsConditionInfo
-                                                                    .ArgsCondition, 
-                                        0, 
-                                        args...))
-                    {
-                        #if SO_LOG_GetCorrectArgumentsDataInfo
-                            std::cout << "Failed at Check parameter\n";
-                        #endif
                         if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)
                             curArgData[i].ArgumentsActionInfo.OtherwiseAction(argumentsList);
+                        
                         continue;
                     }
-                        
+                    
                     //Check times
                     if( curArgData[i].ArgumentsConditionInfo.Times >= 0 && 
                         curArgData[i].ArgumentsConditionInfo.CalledTimes >= 
@@ -137,14 +152,8 @@ namespace SimpleOverride
                     break;
                 }
                 
-                //Deallocating argumentsList
-                //for(int i = 0; i < argumentsList.size(); i++)
-                //    argumentsList[i].Destructor(argumentsList[i].ArgData);
-                
-                //Deallocating derefArgumentsList
-                //for(int i = 0; i < derefArgumentsList.size(); i++)
-                //    derefArgumentsList[i].Destructor(derefArgumentsList[i].ArgData);
-
+                //NOTE: We don't need to deallocate argumentsList and derefArgumentsList 
+                //  because they are just pointers to arg values and type info from the caller
                 return returnIndex;
             }
         
@@ -152,13 +161,14 @@ namespace SimpleOverride
             Internal_ArgsDataRetriever( ArgumentInfosType& overrideArgumentsInfos,
                                         Internal_ArgsValuesAppender& argsValuesAppender,
                                         Internal_ArgsTypeInfoAppender& argsTypeInfoAppender,
-                                        Internal_ArgsChecker& argsChecker) :
+                                        Internal_ArgsTypesChecker& argsTypesChecker,
+                                        Internal_ArgsValuesChecker& argsValuesChecker) : 
                                                 OverrideArgumentsInfos(overrideArgumentsInfos),
                                                 ArgsValuesAppender(argsValuesAppender),
                                                 ArgsTypeInfoAppender(argsTypeInfoAppender),
-                                                ArgsChecker(argsChecker)
+                                                ArgsTypesChecker(argsTypesChecker),
+                                                ArgsValuesChecker(argsValuesChecker)
             {}
-        
     };
 
 }

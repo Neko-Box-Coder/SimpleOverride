@@ -13,7 +13,8 @@
 #include "./Internal_RequirementSetter.hpp"
 #include "./Internal_ArgsValuesAppender.hpp"
 #include "./Internal_ArgsTypeInfoAppender.hpp"
-#include "./Internal_ArgsChecker.hpp"
+#include "./Internal_ArgsTypesChecker.hpp"
+#include "./Internal_ArgsValuesChecker.hpp"
 #include "./Internal_ArgsModifier.hpp"
 #include "./Internal_ReturnDataRetriever.hpp"
 #include "./Internal_ArgsDataRetriever.hpp"
@@ -28,7 +29,8 @@ namespace SimpleOverride
                         public Internal_RequirementSetter,
                         public Internal_ArgsValuesAppender,
                         public Internal_ArgsTypeInfoAppender,
-                        public Internal_ArgsChecker,
+                        public Internal_ArgsTypesChecker,
+                        public Internal_ArgsValuesChecker,
                         public Internal_ArgsModifier,
                         public Internal_ReturnDataRetriever,
                         public Internal_ArgsDataRetriever
@@ -46,8 +48,8 @@ namespace SimpleOverride
                 Internal_ArgumentDataSetter(OverrideArgumentsInfos),
                 Internal_RequirementSetter( OverrideArgumentsInfos,
                                             OverrideReturnInfos),
-                Internal_ReturnDataRetriever(OverrideReturnInfos, *this, *this),
-                Internal_ArgsDataRetriever(OverrideArgumentsInfos, *this, *this, *this)
+                Internal_ReturnDataRetriever(OverrideReturnInfos, *this, *this, *this),
+                Internal_ArgsDataRetriever(OverrideArgumentsInfos, *this, *this, *this, *this)
             {
                 *this = other;
             }
@@ -133,17 +135,19 @@ namespace SimpleOverride
                 return *this;
             }
                 
-            inline Overrider() :   Internal_ReturnDataSetter(OverrideReturnInfos),
-                                                Internal_ArgumentDataSetter(OverrideArgumentsInfos),
-                                                Internal_RequirementSetter( OverrideArgumentsInfos,
-                                                                            OverrideReturnInfos),
-                                                Internal_ReturnDataRetriever(   OverrideReturnInfos, 
-                                                                                *this, 
-                                                                                *this),
-                                                Internal_ArgsDataRetriever( OverrideArgumentsInfos, 
-                                                                            *this, 
-                                                                            *this, 
-                                                                            *this)
+            inline Overrider() :    Internal_ReturnDataSetter(OverrideReturnInfos),
+                                    Internal_ArgumentDataSetter(OverrideArgumentsInfos),
+                                    Internal_RequirementSetter( OverrideArgumentsInfos,
+                                                                OverrideReturnInfos),
+                                    Internal_ReturnDataRetriever(   OverrideReturnInfos, 
+                                                                    *this, 
+                                                                    *this,
+                                                                    *this),
+                                    Internal_ArgsDataRetriever( OverrideArgumentsInfos, 
+                                                                *this, 
+                                                                *this, 
+                                                                *this,
+                                                                *this)
             {}
             
             inline ~Overrider()
@@ -269,12 +273,9 @@ namespace SimpleOverride
                     
                     if(correctData.ReturnDataInfo.DataSet)
                         returnRef = *reinterpret_cast<T*>(correctData.ReturnDataInfo.Data);
-                    else
+                    else if(correctData.ReturnDataInfo.DataActionSet)
                         correctData.ReturnDataInfo.DataAction(argumentsList, &returnRef);
 
-                    assert( correctData.ReturnDataInfo.DataSet || 
-                            correctData.ReturnDataInfo.DataActionSet);
-                    
                     returnResult = true;
                 }
                 

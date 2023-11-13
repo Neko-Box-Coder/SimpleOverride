@@ -7,36 +7,36 @@ namespace
     SimpleOverride::Overrider OverrideObj;
 }
 
-int TestFuncWithoutArgs()
+int FuncWithoutArgs()
 {
     SO_RETURN_IF_FOUND(OverrideObj, TestFuncWithoutArgs(), int);
     return -1;
 }
 
-int TestFuncWithArgs(int testArg, bool testArg2, float testArg3)
+int FuncWithArgs(int testArg, bool testArg2, float testArg3)
 {
     SO_RETURN_IF_FOUND(OverrideObj, TestFuncWithArgs(int, bool, float), int, testArg, testArg2, testArg3);
     return -1;
 }
 
-int TestFuncWithConstArgs(const int testArg, const bool testArg2, float testArg3)
+int FuncWithConstArgs(const int testArg, const bool testArg2, float testArg3)
 {
     SO_RETURN_IF_FOUND(OverrideObj, TestFuncWithConstArgs(const int, const bool, float), int, testArg, testArg2, testArg3);
     return -1;
 }
 
-void* TestFuncWIthVoidPointer(int testArg, void* testArg2)
+void* FuncWIthVoidPointer(int testArg, void* testArg2)
 {
     SO_RETURN_IF_FOUND(OverrideObj, TestFuncWIthVoidPointer(int, void*), void*, testArg, testArg2);
     return nullptr;
 }
 
-void TestFuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
+void FuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
 {
     SO_MODIFY_ARGUMENTS_IF_FOUND(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&), testArg, testArg2, testArg3);
 }
 
-void TestFuncWithConstArgsAndArgsToSet(const int testArg, const float testArg2, std::string& testArg3)
+void FuncWithConstArgsAndArgsToSet(const int testArg, const float testArg2, std::string& testArg3)
 {
     SO_MODIFY_ARGUMENTS_IF_FOUND(OverrideObj, TestFuncWithConstArgsAndArgsToSet(const int, const float, std::string&), testArg, testArg2, testArg3);
 }
@@ -83,7 +83,7 @@ class ComplexClass
         }
 };
 
-int TestFuncWithNonCopyableNonComparableArg(int testArg, ComplexClass& nonCopyableComparableArg)
+int FuncWithNonCopyableNonComparableArg(int testArg, ComplexClass& nonCopyableComparableArg)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
                         TestFuncWithNonCopyableArg(int, ComplexClass&), 
@@ -138,7 +138,7 @@ class NonComparableTestClass
         }
 };
 
-int TestFuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyableArg)
+int FuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyableArg)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
                         TestFuncWithNonCopyableArg(int, NonCopyableTestClass&), 
@@ -149,7 +149,7 @@ int TestFuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyableArg
     return -1;
 }
 
-void TestFuncWithNonComparableArg(int testArg, NonComparableTestClass& nonComparableArg)
+void FuncWithNonComparableArg(int testArg, NonComparableTestClass& nonComparableArg)
 {
     SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
                                     TestFuncWithNonComparableArg(int, NonComparableTestClass&), 
@@ -158,7 +158,7 @@ void TestFuncWithNonComparableArg(int testArg, NonComparableTestClass& nonCompar
 }
 
 template<typename T>
-int TemplateFunctionTest(T testArg)
+int TemplateFunction(T testArg)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
                         template<typename T>\
@@ -182,7 +182,7 @@ int main()
     {
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithoutArgs()).Returns(5);
         
-        ssTEST_OUTPUT_ASSERT(TestFuncWithoutArgs() == 5);
+        ssTEST_OUTPUT_ASSERT(FuncWithoutArgs() == 5);
         
         ssTEST_CALL_SET_UP();
         
@@ -194,13 +194,13 @@ int main()
                                                                     }
                                                                 );
         
-        ssTEST_OUTPUT_ASSERT("Action", TestFuncWithoutArgs() == 5);
+        ssTEST_OUTPUT_ASSERT("Action", FuncWithoutArgs() == 5);
 
         ssTEST_CALL_SET_UP();
         
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithoutArgs()).Times(3);
 
-        ssTEST_OUTPUT_ASSERT("Missing Returns", TestFuncWithoutArgs() == -1);
+        ssTEST_OUTPUT_ASSERT("Missing Returns", FuncWithoutArgs() == -1);
     };
     
     ssTEST("Arguments Test")
@@ -214,7 +214,7 @@ int main()
         float testFloat = 1.f;
         std::string testString = "";
 
-        TestFuncWithArgsToSet(3, &testFloat, testString);
+        FuncWithArgsToSet(3, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT(testFloat == setFloat && testString == setString);
         
@@ -225,7 +225,7 @@ int main()
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&))
                         .SetArgs(SO_DONT_SET, setFloat, SO_DONT_SET);
         
-        TestFuncWithArgsToSet(3, &testFloat, testString);
+        FuncWithArgsToSet(3, &testFloat, testString);
         ssTEST_OUTPUT_ASSERT("Don't Set", testFloat == setFloat && testString != setString);
         
         ssTEST_CALL_SET_UP();
@@ -249,7 +249,7 @@ int main()
                             }
                         );
         
-        TestFuncWithArgsToSet(3, &testFloat, testString);
+        FuncWithArgsToSet(3, &testFloat, testString);
 
         ssTEST_OUTPUT_ASSERT("Action", testFloat == setFloat && testString == setString);
         
@@ -268,8 +268,8 @@ int main()
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithoutArgs()) .Returns(5)
                                                                 .Times(2);
         
-        ssTEST_OUTPUT_ASSERT("Return",  TestFuncWithoutArgs() == 5 && TestFuncWithoutArgs() == 5 && 
-                                        TestFuncWithoutArgs() == -1);
+        ssTEST_OUTPUT_ASSERT("Return",  FuncWithoutArgs() == 5 && FuncWithoutArgs() == 5 && 
+                                        FuncWithoutArgs() == -1);
         
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithoutArgs()) .Returns(3)
                                                                 .Times(1);
@@ -277,9 +277,9 @@ int main()
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithoutArgs()) .Returns(2)
                                                                 .Times(1);
         
-        ssTEST_OUTPUT_ASSERT("Multiple",    TestFuncWithoutArgs() == 3 && 
-                                            TestFuncWithoutArgs() == 2 && 
-                                            TestFuncWithoutArgs() == -1);
+        ssTEST_OUTPUT_ASSERT("Multiple",    FuncWithoutArgs() == 3 && 
+                                            FuncWithoutArgs() == 2 && 
+                                            FuncWithoutArgs() == -1);
 
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&))
                         .SetArgs(SO_DONT_SET, 3.f, std::string("Test"))
@@ -288,9 +288,9 @@ int main()
         float testFloats[3] = {1.f, 1.f, 1.f};
         std::string testStrings[3] = {"", "", ""};
         
-        TestFuncWithArgsToSet(2, &testFloats[0], testStrings[0]);
-        TestFuncWithArgsToSet(2, &testFloats[1], testStrings[1]);
-        TestFuncWithArgsToSet(2, &testFloats[2], testStrings[2]);
+        FuncWithArgsToSet(2, &testFloats[0], testStrings[0]);
+        FuncWithArgsToSet(2, &testFloats[1], testStrings[1]);
+        FuncWithArgsToSet(2, &testFloats[2], testStrings[2]);
         
         //for(int i = 0; i < 3; i++)
         //{
@@ -307,9 +307,9 @@ int main()
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithArgs(int, bool, float)).Returns(5)
                                                                             .WhenCalledWith(1, true, 3.f);
         
-        ssTEST_OUTPUT_ASSERT("Return", TestFuncWithArgs(1, true, 3.f) == 5);
+        ssTEST_OUTPUT_ASSERT("Return", FuncWithArgs(1, true, 3.f) == 5);
         
-        ssTEST_OUTPUT_ASSERT("Non expected args", TestFuncWithArgs(1, true, 4.f) == -1);
+        ssTEST_OUTPUT_ASSERT("Non expected args", FuncWithArgs(1, true, 4.f) == -1);
     
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithArgs(int, bool, float)).Returns(2)
                                                                             .WhenCalledWith(2, true, 3.f);
@@ -322,16 +322,16 @@ int main()
         //std::cout << "TestFuncWithArgs(2, true, 3.f): " << result << std::endl;
         //std::cout << "TestFuncWithArgs(1, false, 3.f): " << result2 << std::endl;
 
-        ssTEST_OUTPUT_ASSERT("Multiple",    TestFuncWithArgs(2, true, 3.f) == 2 && 
-                                            TestFuncWithArgs(3, false, 3.f) == 3);
+        ssTEST_OUTPUT_ASSERT("Multiple",    FuncWithArgs(2, true, 3.f) == 2 && 
+                                            FuncWithArgs(3, false, 3.f) == 3);
                                             
         
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithArgs(int, bool, float)).Returns(7)
                                                                             .WhenCalledWith(4, SO_ANY, SO_ANY);
         
-        ssTEST_OUTPUT_ASSERT("Any", TestFuncWithArgs(4, true, 1.f) == 7 && 
-                                    TestFuncWithArgs(4, false, 4.f) == 7 &&
-                                    TestFuncWithArgs(5, true, 4.f) == -1);
+        ssTEST_OUTPUT_ASSERT("Any", FuncWithArgs(4, true, 1.f) == 7 && 
+                                    FuncWithArgs(4, false, 4.f) == 7 &&
+                                    FuncWithArgs(5, true, 4.f) == -1);
         
         
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&))
@@ -340,7 +340,7 @@ int main()
         
         float testFloat = 2.f;
         std::string testString = "Called";
-        TestFuncWithArgsToSet(1, &testFloat, testString);
+        FuncWithArgsToSet(1, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testFloat == 3.f && testString == "Test");
     };
@@ -360,8 +360,8 @@ int main()
                                 }
                             );
 
-        ssTEST_OUTPUT_ASSERT("Return", TestFuncWithArgs(1, true, 3.f) == 5);
-        ssTEST_OUTPUT_ASSERT("Non expected args", TestFuncWithArgs(2, true, 3.0f) == -1);
+        ssTEST_OUTPUT_ASSERT("Return", FuncWithArgs(1, true, 3.f) == 5);
+        ssTEST_OUTPUT_ASSERT("Non expected args", FuncWithArgs(2, true, 3.0f) == -1);
         
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&))
                         .SetArgs(SO_DONT_SET, 3.f, SO_DONT_SET)
@@ -378,7 +378,7 @@ int main()
         
         float testFloat = 2.f;
         std::string testString = "Test";
-        TestFuncWithArgsToSet(1, &testFloat, testString);
+        FuncWithArgsToSet(1, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testFloat == 3.f && testString == "Test");
     };
@@ -401,10 +401,10 @@ int main()
                                 }
                             );
 
-        TestFuncWithArgs(2, true, 3.0f);
+        FuncWithArgs(2, true, 3.0f);
         ssTEST_OUTPUT_ASSERT("Non expected args", !calledCorrectly);
         
-        TestFuncWithArgs(1, true, 3.f);
+        FuncWithArgs(1, true, 3.f);
         ssTEST_OUTPUT_ASSERT(calledCorrectly);
         
         
@@ -425,7 +425,7 @@ int main()
         
         float testFloat = 2.f;
         std::string testString = "Test";
-        TestFuncWithArgsToSet(1, &testFloat, testString);
+        FuncWithArgsToSet(1, &testFloat, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", calledCorrectly);
     };
@@ -448,10 +448,10 @@ int main()
                                 }
                             );
         
-        TestFuncWithArgs(1, true, 3.f);
+        FuncWithArgs(1, true, 3.f);
         ssTEST_OUTPUT_ASSERT("Return", !calledIncorrectly);
         
-        TestFuncWithArgs(2, true, 3.f);
+        FuncWithArgs(2, true, 3.f);
         ssTEST_OUTPUT_ASSERT("Non expected args", calledIncorrectly);
         
         calledIncorrectly = false;
@@ -472,7 +472,7 @@ int main()
         
         float testFloat = 2.f;
         std::string testString = "Test2";
-        TestFuncWithArgsToSet(1, &testFloat, testString);
+        FuncWithArgsToSet(1, &testFloat, testString);
         ssTEST_OUTPUT_ASSERT("SetArgs", calledIncorrectly && testString == "Test2");
     };
     
@@ -525,21 +525,21 @@ int main()
                             .Returns(5)
                             .WhenCalledWith(1, true, 3.f);
         
-        ssTEST_OUTPUT_ASSERT("Return", TestFuncWithConstArgs(1, true, 3.f) == 5);
+        ssTEST_OUTPUT_ASSERT("Return", FuncWithConstArgs(1, true, 3.f) == 5);
     
         const float constFloat = 4.f;
         SO_OVERRIDE_RETURNS (OverrideObj, TestFuncWithConstArgs(const int, const bool, float))
                             .Returns(6)
                             .WhenCalledWith(1, true, constFloat);
         
-        ssTEST_OUTPUT_ASSERT("Return with const passed in", TestFuncWithConstArgs(1, true, constFloat) == 6);
+        ssTEST_OUTPUT_ASSERT("Return with const passed in", FuncWithConstArgs(1, true, constFloat) == 6);
         
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithConstArgsAndArgsToSet(const int, const float, std::string&))
                         .SetArgs(SO_DONT_SET, SO_DONT_SET, std::string("Test"))
                         .WhenCalledWith(1, 2.f, SO_ANY);
         
         std::string testString = "";
-        TestFuncWithConstArgsAndArgsToSet(1, 2.f, testString);
+        FuncWithConstArgsAndArgsToSet(1, 2.f, testString);
         
         ssTEST_OUTPUT_ASSERT("SetArgs", testString == "Test");
     };
@@ -553,7 +553,7 @@ int main()
                             .Returns((void*)&returnPtr)
                             .WhenCalledWith(3, (void*)&testPtr2);
         
-        ssTEST_OUTPUT_ASSERT(TestFuncWIthVoidPointer(3, &testPtr2) == &returnPtr);
+        ssTEST_OUTPUT_ASSERT(FuncWIthVoidPointer(3, &testPtr2) == &returnPtr);
     };
     
     ssTEST("NonCopyable NonComparable Test")
@@ -577,7 +577,7 @@ int main()
                                 }
                             );
         
-        ssTEST_OUTPUT_ASSERT(TestFuncWithNonCopyableNonComparableArg(2, testClass) == 1 && correctPtr);
+        ssTEST_OUTPUT_ASSERT(FuncWithNonCopyableNonComparableArg(2, testClass) == 1 && correctPtr);
     };
     
     ssTEST("NonCopyable Test")
@@ -601,7 +601,7 @@ int main()
                                 }
                             );
 
-        ssTEST_OUTPUT_ASSERT(TestFuncWithNonCopyableArg(2, testClass) == 1 && correctPtr);
+        ssTEST_OUTPUT_ASSERT(FuncWithNonCopyableArg(2, testClass) == 1 && correctPtr);
     };
 
     ssTEST("NonComparable Test")
@@ -627,7 +627,7 @@ int main()
                             }
                         );
 
-        TestFuncWithNonComparableArg(2, testClass);
+        FuncWithNonComparableArg(2, testClass);
         
         ssTEST_OUTPUT_ASSERT(testClass.A == setClass.A && correctPtr);
     };
@@ -638,11 +638,11 @@ int main()
                                             int TemplateFunctionTest(T)).WhenCalledWith(3)
                                                                         .Returns(0);
         
-        int result = TemplateFunctionTest(3);
+        int result = TemplateFunction(3);
         
         ssTEST_OUTPUT_ASSERT(result == 0);
         
-        result = TemplateFunctionTest("test");
+        result = TemplateFunction("test");
         
         ssTEST_OUTPUT_ASSERT("Different argument type", result == -1);
     };

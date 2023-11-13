@@ -112,49 +112,7 @@ namespace SimpleOverride
             inline ArgumentsProxy& SetArgs( ArgumentsProxy& proxy,
                                             NonComparable<T> arg, Args... args)
             {
-                Internal_ArgumentsData& lastData = 
-                    OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
-                
-                lastData.ArgumentsDataInfo.push_back(Internal_DataInfo());
-                
-                if(!std::is_same<T, Any>())
-                {
-                    lastData.ArgumentsDataInfo.back().Data = new T(*arg.ReferenceVar);
-                    lastData.ArgumentsDataInfo.back().CopyConstructor = 
-                        [](void* data) { return new T(*static_cast<T*>(data)); };
-                    
-                    lastData.ArgumentsDataInfo.back().Destructor = 
-                        [](void* data) { delete static_cast<T*>(data); };
-                    
-                    lastData.ArgumentsDataInfo.back().DataSet = true;
-                    lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
-
-                    #if SO_LOG_SetArgs
-                        std::cout <<    "Set args index: "<<
-                                        lastData.ArgumentsDataInfo.size() - 1 << 
-                                        std::endl;
-                        
-                        std::cout << "arg pointer: "<<&arg<<std::endl;
-                        std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
-                        std::cout <<    "typeid(arg).hash_code(): " << 
-                                        typeid(arg).hash_code() <<
-                                        std::endl;
-                        
-                        std::cout <<    "Set args value: "<< 
-                                        (*static_cast<T*>(lastData.ArgumentsDataInfo.back().Data)) << 
-                                        std::endl << 
-                                        std::endl;
-                        
-                        std::cout << "Original Data: "<<std::endl;
-                        PRINT_BYTES(arg);
-                        
-                        std::cout << "Copied Data: "<<std::endl;
-                        PRINT_BYTES((*static_cast<T*>(lastData.ArgumentsDataInfo.back().Data)));
-                        std::cout << std::endl;
-                    #endif
-                }
-                
-                return SetArgs(proxy, args...);
+                return SetArgs(proxy, *arg.ReferenceVar, args...);
             }
             
             template<typename T, typename... Args>

@@ -11,13 +11,21 @@ class ComplexArg
         float TestFloat = 0.f;
         T TestGenericType;
         
-        inline ComplexArg(std::string testString, int testInt, float testFloat, T testGeneric) :    
-            TestString(testString), TestInt(testInt), TestFloat(testFloat), TestGenericType(testGeneric)
+        inline ComplexArg(  std::string testString, 
+                            int testInt, 
+                            float testFloat, 
+                            T testGeneric) :    TestString(testString), 
+                                                TestInt(testInt), 
+                                                TestFloat(testFloat), 
+                                                TestGenericType(testGeneric)
         {}
         
         inline bool operator== (ComplexArg& other)
         {
-            return TestString == other.TestString && TestInt == other.TestInt && TestFloat == other.TestFloat && TestGenericType == other.TestGenericType;
+            return  TestString == other.TestString && 
+                    TestInt == other.TestInt && 
+                    TestFloat == other.TestFloat && 
+                    TestGenericType == other.TestGenericType;
         }
         
         inline bool operator!= (ComplexArg& other)

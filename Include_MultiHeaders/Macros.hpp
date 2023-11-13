@@ -5,34 +5,30 @@
 #include <string>
 namespace SimpleOverride
 {
-    //==============================================================================
-    //Macros and functions for translating function signature to string
-    //==============================================================================
-    inline std::string ProcessFunctionSig(std::string functionSig)
+    inline std::string Internal_RemoveNewlines(std::string functionSig)
     {
-        //Trimming
-        int firstCharIndex = -1;
+        std::set<int> newlinesToRemove;
         for(int i = 0; i < functionSig.size(); i++)
         {
-            if(functionSig[i] != ' ')
+            switch(functionSig[i])
             {
-                firstCharIndex = i;
-                break;
+                case '\n':
+                case '\r':
+                    newlinesToRemove.insert(i);
+                    break;
+                default:
+                    break;
             }
         }
-        
-        int lastCharIndex = -1;
-        for(int i = functionSig.size() - 1; i >= 0; i--)
-        {
-            if(functionSig[i] != ' ')
-            {
-                lastCharIndex = i;
-                break;
-            }
-        }
-        
-        functionSig = functionSig.substr(firstCharIndex, lastCharIndex - firstCharIndex + 1);
-        
+
+        for(auto it = newlinesToRemove.rbegin(); it != newlinesToRemove.rend(); it++)
+            functionSig.erase(functionSig.begin() + *it);
+
+        return functionSig;
+    }
+    
+    inline std::string Internal_RemoveSpaces(std::string functionSig)
+    {
         //Remove any consecutive spaces
         std::set<int> spacesToRemove;
         bool isLastSpace = false;
@@ -73,10 +69,46 @@ namespace SimpleOverride
             }
         }
         
-        
         for(auto it = spacesToRemove.rbegin(); it != spacesToRemove.rend(); it++)
             functionSig.erase(functionSig.begin() + *it);
 
+        return functionSig;
+    }
+    
+    inline std::string Internal_Trim(std::string functionSig)
+    {
+        //Trimming
+        int firstCharIndex = -1;
+        for(int i = 0; i < functionSig.size(); i++)
+        {
+            if(functionSig[i] != ' ')
+            {
+                firstCharIndex = i;
+                break;
+            }
+        }
+        
+        int lastCharIndex = -1;
+        for(int i = functionSig.size() - 1; i >= 0; i--)
+        {
+            if(functionSig[i] != ' ')
+            {
+                lastCharIndex = i;
+                break;
+            }
+        }
+        
+        return functionSig.substr(firstCharIndex, lastCharIndex - firstCharIndex + 1);
+    }
+    
+    //==============================================================================
+    //Macros and functions for translating function signature to string
+    //==============================================================================
+    inline std::string Internal_ProcessFunctionSig(std::string functionSig)
+    {
+        functionSig = Internal_RemoveNewlines(functionSig);
+        functionSig = Internal_Trim(functionSig);
+        functionSig = Internal_RemoveSpaces(functionSig);
         return functionSig;
     }
 
@@ -131,13 +163,16 @@ namespace SimpleOverride
 
     #define SO_INTERNAL_STR(x) #x
 
+    #define SO_INTERNAL_FUNC_SIG(functionSig) \
+        SimpleOverride::Internal_ProcessFunctionSig(SO_INTERNAL_STR(functionSig))
+
     //==============================================================================
     //Public Macros
     //==============================================================================
 
 
     //-------------------------------------------------------
-    //Return Macros
+    //Return Modifying Macros for implementations
     //-------------------------------------------------------
     #define SO_RETURN_IF_FOUND(overrideObjName, functionSig, returnType, ...)\
     do\
@@ -149,18 +184,22 @@ namespace SimpleOverride
 
     #define SO_CHECK_OVERRIDE_AND_RETURN(overrideObjName, returnRef, functionSig, ...)\
         overrideObjName.Internal_CheckOverrideAndReturn(returnRef, \
-            SimpleOverride::ProcessFunctionSig(SO_INTERNAL_STR(functionSig))\
+            SO_INTERNAL_FUNC_SIG(functionSig)\
             SO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
 
+    //-------------------------------------------------------
+    //Returns Overriding Macros
+    //-------------------------------------------------------
+
     #define SO_OVERRIDE_RETURNS(overrideObjName, functionSig) \
-        overrideObjName.Internal_OverrideReturns(SimpleOverride::ProcessFunctionSig(SO_INTERNAL_STR(functionSig)))
+        overrideObjName.Internal_OverrideReturns(SO_INTERNAL_FUNC_SIG(functionSig))
     
     #define SO_CLEAR_OVERRIDE_RETURNS(overrideObjName, functionSig)\
-        overrideObjName.Internal_ClearOverrideReturns(SimpleOverride::ProcessFunctionSig(SO_INTERNAL_STR(functionSig)))
+        overrideObjName.Internal_ClearOverrideReturns(SO_INTERNAL_FUNC_SIG(functionSig))
 
 
     //-------------------------------------------------------
-    //Argument Macros
+    //Argument Modifying Macros for implementations
     //-------------------------------------------------------
 
     #define SO_MODIFY_ARGUMENTS_IF_FOUND(overrideObjName, functionSig, ...)\
@@ -174,13 +213,19 @@ namespace SimpleOverride
     } while(0)
 
     #define SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, ...)\
-            overrideObjName.Internal_CheckOverrideAndSetArgs(SimpleOverride::ProcessFunctionSig(SO_INTERNAL_STR(functionSig)) SO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
+            overrideObjName.Internal_CheckOverrideAndSetArgs(   SO_INTERNAL_FUNC_SIG(functionSig)\
+                                                                SO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
+
+
+    //-------------------------------------------------------
+    //Argumetns Overriding Macros
+    //-------------------------------------------------------
 
     #define SO_OVERRIDE_ARGS(overrideObjName, functionSig)\
-        overrideObjName.Internal_OverrideArgs(SimpleOverride::ProcessFunctionSig(SO_INTERNAL_STR(functionSig)))
+        overrideObjName.Internal_OverrideArgs(SO_INTERNAL_FUNC_SIG(functionSig))
 
     #define SO_CLEAR_OVERRIDE_ARGS(overrideObjName, functionSig)\
-        overrideObjName.Internal_ClearOverrideArgs(SimpleOverride::ProcessFunctionSig(SO_INTERNAL_STR(functionSig)))
+        overrideObjName.Internal_ClearOverrideArgs(SO_INTERNAL_FUNC_SIG(functionSig))
 
 
     //-------------------------------------------------------
@@ -217,6 +262,33 @@ namespace SimpleOverride
     {\
         return &OverrideObjName;\
     }
+    
+    //#if 1
+    #ifdef SO_NO_OVERRIDE
+        #undef SO_RETURN_IF_FOUND
+        #undef SO_CHECK_OVERRIDE_AND_RETURN
+        #undef SO_OVERRIDE_RETURNS
+        #undef SO_CLEAR_OVERRIDE_RETURNS
+        #undef SO_MODIFY_ARGUMENTS_IF_FOUND
+        #undef SO_MODIFY_ARGUMENTS_AND_RETURN_IF_FOUND
+        #undef SO_CHECK_OVERRIDE_AND_SET_ARGS
+        #undef SO_OVERRIDE_ARGS
+        #undef SO_CLEAR_OVERRIDE_ARGS
+        #undef SO_DECLARE_INSTNACE
+        #undef SO_DECLARE_OVERRIDE_METHODS
+    
+        #define SO_RETURN_IF_FOUND(...)
+        #define SO_CHECK_OVERRIDE_AND_RETURN(...) SO_CHECK_OVERRIDE_AND_RETURN
+        #define SO_OVERRIDE_RETURNS(...)
+        #define SO_CLEAR_OVERRIDE_RETURNS(...)
+        #define SO_MODIFY_ARGUMENTS_IF_FOUND(...)
+        #define SO_MODIFY_ARGUMENTS_AND_RETURN_IF_FOUND(...)
+        #define SO_CHECK_OVERRIDE_AND_SET_ARGS(...) false
+        #define SO_OVERRIDE_ARGS(...)
+        #define SO_CLEAR_OVERRIDE_ARGS(...)
+        #define SO_DECLARE_INSTNACE(...)
+        #define SO_DECLARE_OVERRIDE_METHODS(...)
+    #endif
 }
 
 #endif

@@ -30,12 +30,6 @@ namespace SimpleOverride
                                     T& arg, 
                                     Args&... args)
             {
-                if(!argsData[index].DataSet && !argsData[index].DataActionSet)
-                {
-                    ModifyArgs(argumentsList, argsData, ++index, args...);
-                    return;
-                }
-            
                 if(argsData[index].DataSet)
                 {
                     INTERNAL_SO_PURE_T& pureArg = const_cast<INTERNAL_SO_PURE_T&>(arg); 
@@ -63,7 +57,7 @@ namespace SimpleOverride
                         std::cout << std::endl;
                     #endif
                 }
-                else
+                else if(argsData[index].DataActionSet)
                     argsData[index].DataAction(argumentsList, &const_cast<INTERNAL_SO_PURE_T&>(arg));
 
                 ModifyArgs(argumentsList, argsData, ++index, args...);
@@ -76,12 +70,6 @@ namespace SimpleOverride
                                     NonComparable<T>& arg, 
                                     Args&... args)
             {
-                if(!argsData[index].DataSet && !argsData[index].DataActionSet)
-                {
-                    ModifyArgs(argumentsList, argsData, ++index, args...);
-                    return;
-                }
-            
                 #if SO_LOG_ModifyArgs
                     std::cout << "modified index: "<<index << std::endl;
                     std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
@@ -110,7 +98,7 @@ namespace SimpleOverride
                         std::cout << std::endl;
                     #endif
                 }
-                else
+                else if(argsData[index].DataActionSet)
                     argsData[index].DataAction(argumentsList, &((INTERNAL_SO_PURE_T&)(arg)));
 
                 ModifyArgs(argumentsList, argsData, ++index, args...);
@@ -162,12 +150,6 @@ namespace SimpleOverride
                                     const T& arg, 
                                     Args&... args)
             {
-                if(!argsData[index].DataSet && !argsData[index].DataActionSet)
-                {
-                    ModifyArgs(argumentsList, argsData, ++index, args...);
-                    return;
-                }
-                
                 #if SO_LOG_ModifyArgs
                     std::cout << "modified index: "<<index << std::endl;
                     std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
@@ -182,7 +164,7 @@ namespace SimpleOverride
                     assert(false);
                     exit(1);
                 }
-                else
+                else if(argsData[index].DataActionSet)
                 {
                     std::cout << "[WARNING] DataAction is called on const argument, \
                                     is this intentional?" << std::endl;
