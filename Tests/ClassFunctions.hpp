@@ -43,7 +43,7 @@ class Rectangle : public Shape
         
         inline virtual void SetWidth(float width)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetWidth(float), 
                                             width);
 
@@ -52,7 +52,7 @@ class Rectangle : public Shape
         
         inline virtual void SetWidth(int width)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetWidth(int), 
                                             width);
 
@@ -70,7 +70,7 @@ class Rectangle : public Shape
         
         inline virtual void SetHeight(float height)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetHeight(float), 
                                             height);
             
@@ -79,7 +79,7 @@ class Rectangle : public Shape
         
         inline virtual void SetHeight(int height)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetHeight(int), 
                                             height);
             
@@ -140,7 +140,7 @@ class Square : public Rectangle
         
         inline virtual void SetSize(float size)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetSize(float), 
                                             size);
             
@@ -150,7 +150,7 @@ class Square : public Rectangle
         
         inline virtual void SetSize(int size)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetSize(int), 
                                             size);
             
@@ -169,7 +169,7 @@ class Square : public Rectangle
         
         void SetMetaData(T metaData)
         {
-            SO_MODIFY_ARGUMENTS_IF_FOUND(   Overrider, 
+            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
                                             SetMetaData(T), 
                                             metaData);
             

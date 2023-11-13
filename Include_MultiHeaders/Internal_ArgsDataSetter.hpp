@@ -15,7 +15,7 @@
 
 namespace SimpleOverride
 {
-    class Internal_ArgumentDataSetter
+    class Internal_ArgsDataSetter
     {
         friend class ArgumentsProxy;
         
@@ -26,11 +26,11 @@ namespace SimpleOverride
             ArgumentInfosType& OverrideArgumentsInfos;
             
             template<typename T>
-            inline ArgumentsProxy& SetArgsByAction( ArgumentsProxy& proxy,
-                                                    std::function<void( std::vector<void*>& args, 
-                                                                        void* out)> setArgsAction)
+            inline ArgumentsProxy& SetArgByAction( ArgumentsProxy& proxy,
+                                                    std::function<void( const std::vector<void*>& args, 
+                                                                        void* currentArg)> setArgsAction)
             {
-                Internal_ArgumentsData& lastData = 
+                Internal_ArgsData& lastData = 
                     OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
                 
                 lastData.ArgumentsDataInfo.push_back(Internal_DataInfo());
@@ -64,7 +64,7 @@ namespace SimpleOverride
             inline ArgumentsProxy& SetArgs( ArgumentsProxy& proxy,
                                                             T arg, Args... args)
             {
-                Internal_ArgumentsData& lastData = 
+                Internal_ArgsData& lastData = 
                     OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
                 
                 lastData.ArgumentsDataInfo.push_back(Internal_DataInfo());
@@ -136,7 +136,7 @@ namespace SimpleOverride
             }
         
         public:
-            inline Internal_ArgumentDataSetter(ArgumentInfosType& overrideArgumentsInfos) : 
+            inline Internal_ArgsDataSetter(ArgumentInfosType& overrideArgumentsInfos) : 
                 OverrideArgumentsInfos(overrideArgumentsInfos)
             {}
     };

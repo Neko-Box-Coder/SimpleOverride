@@ -202,10 +202,10 @@ namespace SimpleOverride
     //Argument Modifying Macros for implementations
     //-------------------------------------------------------
 
-    #define SO_MODIFY_ARGUMENTS_IF_FOUND(overrideObjName, functionSig, ...)\
+    #define SO_MODIFY_ARGS_IF_FOUND(overrideObjName, functionSig, ...)\
         SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, __VA_ARGS__)
             
-    #define SO_MODIFY_ARGUMENTS_AND_RETURN_IF_FOUND(overrideObjName, returnValue, functionSig, ...)\
+    #define SO_MODIFY_ARGS_AND_RETURN_IF_FOUND(overrideObjName, returnValue, functionSig, ...)\
     do\
     {\
         if(SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, __VA_ARGS__))\
@@ -231,7 +231,8 @@ namespace SimpleOverride
     //-------------------------------------------------------
     //Delacration Macros
     //-------------------------------------------------------
-    #define SO_DECLARE_INSTNACE(OverrideObjName) mutable SimpleOverride::Overrider OverrideObjName
+    #define SO_DECLARE_MEMBER_INSTNACE(OverrideObjName) mutable SimpleOverride::Overrider OverrideObjName
+    #define SO_DECLARE_INSTNACE(OverrideObjName) SimpleOverride::Overrider OverrideObjName
             
     #define SO_DECLARE_OVERRIDE_METHODS(OverrideObjName)\
     inline SimpleOverride::ArgumentsProxy Internal_OverrideArgs(std::string functionName)\
@@ -269,8 +270,8 @@ namespace SimpleOverride
         #undef SO_CHECK_OVERRIDE_AND_RETURN
         #undef SO_OVERRIDE_RETURNS
         #undef SO_CLEAR_OVERRIDE_RETURNS
-        #undef SO_MODIFY_ARGUMENTS_IF_FOUND
-        #undef SO_MODIFY_ARGUMENTS_AND_RETURN_IF_FOUND
+        #undef SO_MODIFY_ARGS_IF_FOUND
+        #undef SO_MODIFY_ARGS_AND_RETURN_IF_FOUND
         #undef SO_CHECK_OVERRIDE_AND_SET_ARGS
         #undef SO_OVERRIDE_ARGS
         #undef SO_CLEAR_OVERRIDE_ARGS
@@ -281,8 +282,8 @@ namespace SimpleOverride
         #define SO_CHECK_OVERRIDE_AND_RETURN(...) SO_CHECK_OVERRIDE_AND_RETURN
         #define SO_OVERRIDE_RETURNS(...)
         #define SO_CLEAR_OVERRIDE_RETURNS(...)
-        #define SO_MODIFY_ARGUMENTS_IF_FOUND(...)
-        #define SO_MODIFY_ARGUMENTS_AND_RETURN_IF_FOUND(...)
+        #define SO_MODIFY_ARGS_IF_FOUND(...)
+        #define SO_MODIFY_ARGS_AND_RETURN_IF_FOUND(...)
         #define SO_CHECK_OVERRIDE_AND_SET_ARGS(...) false
         #define SO_OVERRIDE_ARGS(...)
         #define SO_CLEAR_OVERRIDE_ARGS(...)

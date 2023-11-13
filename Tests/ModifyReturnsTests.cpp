@@ -12,14 +12,8 @@ int main()
     {
         OverrideObj = SimpleOverride::Overrider();
     };
-    
-    //TODO:
-    //- Test primitive types
-    //- Test objects
-    //- Test string
-    //- Test template objects
-    
-    ssTEST("Primitive types Test")
+
+    ssTEST("Return Primitive types Test")
     {
         Rectangle rect(1.5, 1.5);
         
@@ -34,7 +28,7 @@ int main()
         ssTEST_OUTPUT_ASSERT("float", rect.GetWidth() == 5.f);
     };
     
-    ssTEST("Object Test")
+    ssTEST("Return Object Test")
     {
         DummyClass assertObject(1, 2.0, "test");
         
@@ -44,28 +38,32 @@ int main()
         ssTEST_OUTPUT_ASSERT(ReturnObjectFunc(1, 3.0, "test 2") == assertObject);
     };
     
-    ssTEST("String Test")
+    ssTEST("Return String Test")
     {
         SO_OVERRIDE_RETURNS (OverrideObj, ReturnStringFunc(int))
-                            .Returns("test");
+                            .Returns(std::string("test"));
         
         ssTEST_OUTPUT_ASSERT(ReturnStringFunc(1) == "test");
     };
     
-    ssTEST("Template Object Test")
+    ssTEST("Return Template Object Test")
     {
+        DummyClass assertObject(1, 2.f, "test");
+        DummyClass testObject(2, 3.f, "test 2");
         
-        
-        
-        SO_OVERRIDE_RETURNS (OverrideObj, ReturnTemplatedObjectFunc(std::string, int, float, int))
+        SO_OVERRIDE_RETURNS (OverrideObj, ReturnTemplateObjectFunc(T))
                             .Returns(assertObject);
         
-        ssTEST_OUTPUT_ASSERT(   ReturnTemplatedObjectFunc( "test string 2", 
-                                                            3, 
-                                                            5.0f, 
-                                                            3) == assertObject);
-    }
+        ssTEST_OUTPUT_ASSERT(ReturnTemplateObjectFunc<DummyClass>(testObject) == assertObject);
+    };
     
+    ssTEST("Return Nothing Test")
+    {
+        SO_OVERRIDE_RETURNS (OverrideObj, FuncWithoutArgs())
+                            .Returns(SO_DONT_OVERRIDE_RETURN);
+
+        ssTEST_OUTPUT_ASSERT(FuncWithoutArgs() == -1);
+    };
     
     ssTEST_END();
     return 0;

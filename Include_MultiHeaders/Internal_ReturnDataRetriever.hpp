@@ -58,10 +58,6 @@ namespace SimpleOverride
                     if( curReturnDatas[i].ReturnDataInfo.DataSet ||
                         curReturnDatas[i].ReturnDataInfo.DataActionSet)
                     {
-                        #if SO_LOG_GetCorrectReturnDataInfo
-                            std::cout << "Failed at return data exist\n";
-                        #endif
-                        
                         //Check return type match
                         if(curReturnDatas[i].ReturnDataInfo.DataType != 
                             typeid(INTERNAL_SO_PURE_T).hash_code())

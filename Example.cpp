@@ -1,7 +1,7 @@
 //#include "SimpleOverride.hpp"
 #include "SimpleOverride.hpp"
 
-SimpleOverride::Overrider Overrider;
+SO_DECLARE_INSTNACE(Overrider);
 
 int ChangeReturnValue(int a, float* b)
 {
@@ -13,8 +13,8 @@ int ChangeReturnValue(int a, float* b)
 
 void SetArgumentValue(int a, float& b, int* c)
 {
-    //SO_MODIFY_ARGUMENTS_IF_FOUND(overrideObj, functionRef, args...)
-    SO_MODIFY_ARGUMENTS_IF_FOUND(Overrider, SetArgumentValue(int, float&, int*), a, b, c);
+    //SO_MODIFY_ARGS_IF_FOUND(overrideObj, functionRef, args...)
+    SO_MODIFY_ARGS_IF_FOUND(Overrider, SetArgumentValue(int, float&, int*), a, b, c);
     
     //You can also use SO_ARGUMENTS_AND_RETURN_IF_FOUND to return a specify value
     //  When the condition is met
@@ -23,28 +23,20 @@ void SetArgumentValue(int a, float& b, int* c)
 int main()
 {
     //Example of overriding return value
+    //Pointers are automatically dereferenced when getting compared.
+    //      Unless it is cast to void*, then it won't be dereferenced.
     SO_OVERRIDE_RETURNS (Overrider, ChangeReturnValue(int, float*))  
                         .Returns(1)
-                        
-                        //Pointers are automatically dereferenced when getting compared.
-                        //      Unless it is cast to void*, then it won't be dereferenced.
                         .WhenCalledWith(2, 3.f)
-                        
-                        //By default, it is infinite times if not specified
                         .Times(2);
 
     float testFloat = 3.f;
     assert(ChangeReturnValue(2, &testFloat) == 1 && ChangeReturnValue(2, &testFloat) == 1);
-    
-    testFloat = 4.f;
-    assert(ChangeReturnValue(4, &testFloat) == 0);
+    assert(ChangeReturnValue(4, &testFloat) != 1);
     
     
     //Example of overriding argument value
-
     SO_OVERRIDE_ARGS(Overrider, SetArgumentValue(int, float&, int*))
-    
-                    //Again, pointers are automatically dereferenced when getting set
                     .SetArgs(SO_DONT_SET, 2.f, 3)
                     .WhenCalledWith(4, SO_ANY, SO_ANY);
 
@@ -58,7 +50,7 @@ int main()
     //Extra:
     //------------------------------------------------
     
-    //ReturnsByAction and SetArgsByAction can also be used to return or set arguments by lambda
+    //ReturnsByAction and SetArgByAction can also be used to return or set arguments by lambda
     
     //SO_DECLARE_INSTNACE(OverrideObjName) macro can be used inside a class declaration to 
     //  declare an instance of overriding object

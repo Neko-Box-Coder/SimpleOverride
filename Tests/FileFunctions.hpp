@@ -45,7 +45,7 @@ inline void* FuncWIthVoidPointer(int testArg, void* testArg2)
 
 inline void FuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
+    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     TestFuncWithArgsToSet(int, float*, std::string&), 
                                     testArg, 
                                     testArg2, 
@@ -56,7 +56,7 @@ inline void FuncWithConstArgsAndArgsToSet(  const int testArg,
                                                 const float testArg2, 
                                                 std::string& testArg3)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
+    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     TestFuncWithConstArgsAndArgsToSet(  const int, 
                                                                         const float, 
                                                                         std::string&), 
@@ -89,7 +89,7 @@ inline int FuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyable
 
 inline void FuncWithNonComparableArg(int testArg, NonComparableTestClass& nonComparableArg)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
+    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     TestFuncWithNonComparableArg(int, NonComparableTestClass&), 
                                     testArg, 
                                     (SO_NonComparable<NonComparableTestClass>&)nonComparableArg);
@@ -108,7 +108,7 @@ inline int TemplateFunction(T testArg)
 
 inline DummyClass ReturnObjectFunc(int data, double value, std::string name)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
+    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     ReturnObjectFunc(int, double, std::string), 
                                     data,
                                     value,
@@ -126,7 +126,7 @@ inline DummyClass ReturnObjectFunc(int data, double value, std::string name)
 
 inline bool SetObjectFunc(int data, double value, std::string name, DummyClass& dummyClass)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
+    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     SetObjectFunc(int, double, std::string, DummyClass&), 
                                     data, 
                                     value, 
@@ -156,10 +156,10 @@ inline std::string ReturnStringFunc(int value)
 }
 
 template<typename T>
-inline T ReturnTemplateObject(T testArg)
+inline T ReturnTemplateObjectFunc(T testArg)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
-                        ReturnTemplateObject(T), 
+                        ReturnTemplateObjectFunc(T), 
                         T, 
                         testArg);
     

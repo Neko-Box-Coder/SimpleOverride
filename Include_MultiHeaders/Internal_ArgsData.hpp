@@ -7,7 +7,7 @@
 
 namespace SimpleOverride
 {
-    struct Internal_ArgumentsData
+    struct Internal_ArgsData
     {
         Internal_ConditionInfo ArgumentsConditionInfo;
         std::vector<Internal_DataInfo> ArgumentsDataInfo;

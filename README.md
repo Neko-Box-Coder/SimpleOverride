@@ -4,84 +4,194 @@ A simple framework for overriding function behaviours.
 
 This allows overriding return value or setting arguments, similar to mocking but more flexible
 
+---
+
+### Declare Override Instance
+#### Global / File Scope
 ```cpp
-#include "SimpleOverride.hpp"
-
-SimpleOverride Overrider;
-
-int ChangeReturnValue(int a, float* b)
+SO_DECLARE_INSTNACE(OverrideInstanceName);
+```
+#### Class Member Variable
+```cpp
+class DummyClassMock
 {
-    //SO_RETURN_IF_FOUND(functionOverrideObj, functionRef, returnType, args...)
-    SO_RETURN_IF_FOUND(Overrider, ChangeReturnValue(int, float*), int, a, b);
-    
-    return 0;
-}
+    private:
+        SO_DECLARE_MEMBER_INSTNACE(OverrideInstanceName);
+    //...
+    public:
+        SO_DECLARE_OVERRIDE_METHODS(OverrideInstanceName);
+    //...
+};
+```
 
-void SetArgumentValue(int a, float& b, int* c)
+---
+
+### Override Implementations
+#### Override Implementation Return Value
+```cpp
+SO_RETURN_IF_FOUND( [Override Instance Name], 
+                    [Function Name]([Args Types...]), 
+                    [Args Names...]);
+```
+
+Example:
+```cpp
+int OverrideMyReturnValue(int value1, float value2)
 {
-    //SO_MODIFY_ARGUMENTS_IF_FOUND(overrideObj, functionRef, args...)
-    SO_MODIFY_ARGUMENTS_IF_FOUND(Overrider, SetArgumentValue(int, float&, int*), a, b, c);
-    
-    //You can also use SO_ARGUMENTS_AND_RETURN_IF_FOUND to return a specify value
-    //  When the condition is met
-}
-
-int main()
-{
-    //Example of overriding return value
-    SO_OVERRIDE_RETURNS (Overrider, ChangeReturnValue(int, float*))  
-                        .Returns(1)
-                        
-                        //Pointers are automatically dereferenced when getting compared.
-                        //      Unless it is cast to void*, then it won't be dereferenced.
-                        .WhenCalledWith(2, 3.f)
-                        
-                        //By default, it is infinite times if not specified
-                        .Times(2);
-
-    float testFloat = 3.f;
-    assert(ChangeReturnValue(2, &testFloat) == 1 && ChangeReturnValue(2, &testFloat) == 1);
-    
-    testFloat = 4.f;
-    assert(ChangeReturnValue(4, &testFloat) == 0);
-    
-    
-    //Example of overriding argument value
-
-    SO_OVERRIDE_ARGS(Overrider, SetArgumentValue(int, float&, int*))
-    
-                    //Again, pointers are automatically dereferenced when getting set
-                    .SetArgs(SO_DONT_SET, 2.f, 3)
-                    .WhenCalledWith(4, SO_ANY, SO_ANY);
-
-    int testInt = 5;
-    SetArgumentValue(4, testFloat, &testInt);
-    assert(testFloat == 2.f && testInt == 3);
-    
-    std::cout << "Success\n";
-    
-    //------------------------------------------------
-    //Extra:
-    //------------------------------------------------
-    
-    //ReturnsByAction and SetArgsByAction can also be used to return or set arguments by lambda
-    
-    //SO_DECLARE_INSTNACE(OverrideObjName) macro can be used inside a class declaration to 
-    //  declare an instance of overriding object
-
-    //SO_DECLARE_OVERRIDE_METHODS(OverrideObjName) macro can be used inside a class declaration 
-    //  to declare proxy methods inline implementations to the override object
-    
-    //SO_NonCopyable and SO_NonComparable can be used for objects that are not copyable or comparable.
-    //  These objects won't be compared against in WhenCalledWith.
-    
-    //You also have access to "If" clause for additonal conditions
-    
-    //Similarly, you have "WhenCalledExpectedly_Do" and "Otherwise_Do" clauses for performing custom actions
-    //  when the condition is matched or not respectively
-    
-    //For usage on these extra actions, see Tests/SimpleOverrideTests.cpp
-    
+    SO_RETURN_IF_FOUND(OverrideInstanceName, 
+                       OverrideMyReturnValue(int, float), 
+                       value, 
+                       value2);
     return 0;
 }
 ```
+#### Override Implementation Argument Values
+```cpp
+SO_MODIFY_ARGS_IF_FOUND([Override Instance Name], 
+                        [Function Name]([Args Types...]), 
+                        [Args Names...]);
+
+//or
+
+SO_MODIFY_ARGS_AND_RETURN_IF_FOUND( [Override Instance Name], 
+                                    [Return Value],
+                                    [Function Name]([Args Types...]), 
+                                    [Args Names...]);
+```
+
+Examples:
+```cpp
+void OverrideMyArgs(float& value1, int* value2)
+{
+    SO_MODIFY_ARGS_IF_FOUND(OverrideInstanceName, 
+                            OverrideMyArgs(float&, int*), 
+                            value1, 
+                            value2);
+}
+```
+or
+```cpp
+bool OverrideMyArgsWithStstus(float& value1, int* value2)
+{
+    //Returns true if there's an override for setting arguments
+    SO_MODIFY_ARGS_AND_RETURN_IF_FOUND(OverrideInstanceName, 
+                                       true,
+                                       OverrideMyArgs(float&, int*), 
+                                       value1, 
+                                       value2);
+
+    return false;
+}
+```
+
+---
+
+### Override Functions
+#### Override Returns
+```cpp
+SO_OVERRIDE_RETURNS([Override Instance Name], [Function Name]([Args Types...]))
+                   .Returns([Return Value]);
+```
+Example:
+```cpp
+SO_OVERRIDE_RETURNS(OverrideInstanceName, OverrideMyReturnValue(int, float))
+                   .Returns(1);
+```
+#### Override Arguments Values
+```cpp
+SO_OVERRIDE_ARGS([Override Instance Name], [Function Name]([Args Types...]))
+                .SetArgs([Args Values...]);
+```
+Example:
+```cpp
+SO_OVERRIDE_ARGS(OverrideInstanceName, OverrideMyArgs(float&, int*))
+                .SetArgs(1.f, 3);
+```
+#### Override Returns With Action Lambda
+```cpp
+SO_OVERRIDE_RETURNS(OverrideInstanceName, OverrideMyReturnValue(int, float))
+                   .ReturnsByAction
+                    ( 
+                        [](const std::vector<void*>& args, void* out)
+                        { 
+                            *static_cast<int*>(out) = 5;
+                        }
+                    );
+```
+#### Override Arguments With Action Lambda
+```cpp
+SO_OVERRIDE_ARGS(OverrideInstanceName, OverrideMyArgs(float&, int*))
+                .SetArgByAction //First Argument
+                (
+                    [](const std::vector<void*>& args, void* currentArg)
+                    {
+                        *static_cast<float*>(currentArg) = 1.f;
+                    }
+                )
+                .SetArgByAction //Second Argument
+                (
+                    [](const std::vector<void*>& args, void* currentArg)
+                    {
+                        *static_cast<float*>(currentArg) = 2;
+                    }
+                );
+```
+
+---
+
+### Specify Override Rules
+#### When Called With
+```cpp
+SO_OVERRIDE_RETURNS(OverrideInstanceName, OverrideMyReturnValue(int, float))
+                   .WhenCalledWith(2, 3.f)
+                   .Returns(1);
+
+int ret1 = OverrideMyReturnValue(2, 3.f);   //Returns 1
+int ret2 = OverrideMyReturnValue(1, 2.f);   //Won't return 1
+```
+
+#### Times
+```cpp
+SO_OVERRIDE_ARGS(OverrideInstanceName, OverrideMyArgs(float&, int*))
+                .SetArgs(1.f, 2)
+                .Times(1);
+
+float testFloat = 2.f;
+int testInt = 3;
+OverrideMyArgs(testFloat, &testInt);    //The argument values are set to 1.f and 2
+
+testFloat = 2.f;
+testInt = 3;
+OverrideMyArgs(testFloat, &testInt);    //The argument values are still 2.f and 3
+```
+
+#### If Condition Lambda
+```cpp
+SO_OVERRIDE_RETURNS(OverrideInstanceName, OverrideMyReturnValue(int, float))
+                   .If
+                    (
+                        [](const std::vector<void*>& args)
+                        {
+                            if(*static_cast<int*>(args.at(0) == 1)
+                                return true;
+                            else
+                                return false;
+                        }
+                    )
+                   .Returns(1);
+
+int ret1 = OverrideMyReturnValue(1, 2.f);   //Returns 1
+int ret2 = OverrideMyReturnValue(2, 3.f);   //Won't return 1
+```
+
+#### When Called Expectedly Do Lambda
+
+
+
+#### Otherwise Do Lambda
+
+
+
+
+
+---

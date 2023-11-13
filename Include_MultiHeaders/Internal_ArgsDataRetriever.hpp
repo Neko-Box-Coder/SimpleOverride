@@ -48,7 +48,7 @@ namespace SimpleOverride
                 std::vector<ArgInfo> deRefArgumentsList;
                 ArgsTypeInfoAppender.AppendArgsPureTypeInfo(deRefArgumentsList, args...);
                 
-                std::vector<Internal_ArgumentsData>& curArgData = 
+                std::vector<Internal_ArgsData>& curArgData = 
                     OverrideArgumentsInfos[functionName].ArgumentsDatas;
                 
                 int returnIndex = -1;

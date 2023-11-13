@@ -170,7 +170,7 @@ namespace SimpleOverride
             
             template<typename DeriveType>
             inline DeriveType& If(  CommonProxy<DeriveType>& proxy, 
-                                    std::function<bool(std::vector<void*>& args)> condition)
+                                    std::function<bool(const std::vector<void*>& args)> condition)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -216,7 +216,7 @@ namespace SimpleOverride
             
             template<typename DeriveType>
             inline DeriveType& Otherwise_Do(CommonProxy<DeriveType>& proxy, 
-                                            std::function<void(std::vector<void*>& args)> action)
+                                            std::function<void(const std::vector<void*>& args)> action)
             {
                 switch(proxy.FunctionProxyType)
                 {
@@ -263,7 +263,7 @@ namespace SimpleOverride
             template<typename DeriveType>
             inline DeriveType& 
                 WhenCalledExpectedly_Do(CommonProxy<DeriveType>& proxy, 
-                                        std::function<void(std::vector<void*>& args)> action)
+                                        std::function<void(const std::vector<void*>& args)> action)
             {
                 switch(proxy.FunctionProxyType)
                 {

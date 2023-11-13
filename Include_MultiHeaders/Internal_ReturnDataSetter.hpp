@@ -11,6 +11,7 @@
 #include "./NonComparable.hpp"
 #include "./Any.hpp"
 
+#include <iostream>
 #include <unordered_map>
 
 namespace SimpleOverride
@@ -30,9 +31,11 @@ namespace SimpleOverride
             //------------------------------------------------------------------------------
             template<typename T>
             inline ReturnProxy& ReturnsByAction(ReturnProxy& proxy, 
-                                                                std::function<void(std::vector<void*>& args, void* out)> returnAction)
+                                                std::function<void( const std::vector<void*>& args, 
+                                                                    void* out)> returnAction)
             {
-                Internal_ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
+                Internal_ReturnData& lastData = 
+                    OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
 
                 lastData.ReturnDataInfo.DataAction = returnAction;
                 lastData.ReturnDataInfo.DataActionSet = true;
@@ -45,10 +48,16 @@ namespace SimpleOverride
             {
                 if(!std::is_same<T, Any>())
                 {
-                    Internal_ReturnData& lastData = OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
+                    Internal_ReturnData& lastData = 
+                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back();
+                    
                     lastData.ReturnDataInfo.Data = new T(returnData);
-                    lastData.ReturnDataInfo.CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
-                    lastData.ReturnDataInfo.Destructor = [](void* data) { delete static_cast<T*>(data); }; 
+                    lastData.ReturnDataInfo.CopyConstructor = 
+                        [](void* data) { return new T(*static_cast<T*>(data)); };
+                    
+                    lastData.ReturnDataInfo.Destructor = 
+                        [](void* data) { delete static_cast<T*>(data); }; 
+                    
                     lastData.ReturnDataInfo.DataSet = true;
                     lastData.ReturnDataInfo.DataType = typeid(T).hash_code();
                 }

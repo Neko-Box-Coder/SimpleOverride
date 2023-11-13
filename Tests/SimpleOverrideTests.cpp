@@ -33,12 +33,12 @@ void* FuncWIthVoidPointer(int testArg, void* testArg2)
 
 void FuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&), testArg, testArg2, testArg3);
+    SO_MODIFY_ARGS_IF_FOUND(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&), testArg, testArg2, testArg3);
 }
 
 void FuncWithConstArgsAndArgsToSet(const int testArg, const float testArg2, std::string& testArg3)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(OverrideObj, TestFuncWithConstArgsAndArgsToSet(const int, const float, std::string&), testArg, testArg2, testArg3);
+    SO_MODIFY_ARGS_IF_FOUND(OverrideObj, TestFuncWithConstArgsAndArgsToSet(const int, const float, std::string&), testArg, testArg2, testArg3);
 }
 
 template<typename T>
@@ -151,7 +151,7 @@ int FuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyableArg)
 
 void FuncWithNonComparableArg(int testArg, NonComparableTestClass& nonComparableArg)
 {
-    SO_MODIFY_ARGUMENTS_IF_FOUND(   OverrideObj, 
+    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     TestFuncWithNonComparableArg(int, NonComparableTestClass&), 
                                     testArg, 
                                     (SO_NonComparable<NonComparableTestClass>&)nonComparableArg);
@@ -188,7 +188,7 @@ int main()
         
         SO_OVERRIDE_RETURNS(OverrideObj, TestFuncWithoutArgs()) .ReturnsByAction<int>
                                                                 (
-                                                                    [](std::vector<void*>& args, void* out)
+                                                                    [](const std::vector<void*>& args, void* out)
                                                                     {
                                                                         *(static_cast<int*>(out)) = 5;
                                                                     }
@@ -234,16 +234,16 @@ int main()
         
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&))
                         .SetArgs(SO_DONT_SET)
-                        .SetArgsByAction<float>
+                        .SetArgByAction<float>
                         (
-                            [setFloat](std::vector<void*>& args, void* out)
+                            [setFloat](const std::vector<void*>& args, void* out)
                             {
                                 *(static_cast<float*>(out)) = setFloat;
                             }
                         )
-                        .SetArgsByAction<std::string>
+                        .SetArgByAction<std::string>
                         (
-                            [setString](std::vector<void*>& args, void* out)
+                            [setString](const std::vector<void*>& args, void* out)
                             {
                                 *(static_cast<std::string*>(out)) = setString;
                             }
@@ -351,7 +351,7 @@ int main()
                             .Returns(5)
                             .If
                             (
-                                [](std::vector<void*>& args) -> bool
+                                [](const std::vector<void*>& args) -> bool
                                 {
                                     return  args.size() == 3 && 
                                             *static_cast<int*>(args[0]) == 1 &&
@@ -367,7 +367,7 @@ int main()
                         .SetArgs(SO_DONT_SET, 3.f, SO_DONT_SET)
                         .If
                         (
-                            [](std::vector<void*>& args) -> bool
+                            [](const std::vector<void*>& args) -> bool
                             {
                                 return  args.size() == 3 &&
                                         *static_cast<int*>(args[0]) == 1 &&
@@ -392,7 +392,7 @@ int main()
                             .WhenCalledWith(1, true, 3.f)
                             .WhenCalledExpectedly_Do
                             (
-                                [&calledCorrectly](std::vector<void*>& args)
+                                [&calledCorrectly](const std::vector<void*>& args)
                                 {
                                     calledCorrectly =   args.size() == 3 && 
                                                         *static_cast<int*>(args[0]) == 1 &&
@@ -414,7 +414,7 @@ int main()
                         .WhenCalledWith(1, 2.f, std::string("Test"))
                         .WhenCalledExpectedly_Do
                         (
-                            [&calledCorrectly](std::vector<void*>& args)
+                            [&calledCorrectly](const std::vector<void*>& args)
                             {
                                 calledCorrectly =   args.size() == 3 &&
                                                     *static_cast<int*>(args[0]) == 1 &&
@@ -439,7 +439,7 @@ int main()
                             .WhenCalledWith(1, true, 3.f)
                             .Otherwise_Do
                             (
-                                [&calledIncorrectly](std::vector<void*>& args)
+                                [&calledIncorrectly](const std::vector<void*>& args)
                                 {
                                     calledIncorrectly = !(args.size() == 3 && 
                                                         *static_cast<int*>(args[0]) == 1 &&
@@ -461,7 +461,7 @@ int main()
                         .WhenCalledWith(1, 2.f, std::string("Test"))
                         .Otherwise_Do
                         (
-                            [&calledIncorrectly](std::vector<void*>& args)
+                            [&calledIncorrectly](const std::vector<void*>& args)
                             {
                                 calledIncorrectly = args.size() == 3 &&
                                                     *static_cast<int*>(args[0]) == 1 &&
@@ -509,7 +509,7 @@ int main()
         SO_OVERRIDE_RETURNS (testClass, ComplexMemberFunction(ComplexArg<char*>, ComplexArg<std::vector<int>>))
                             .ReturnsByAction<int>
                             (
-                                [](std::vector<void*>& args, void* out)
+                                [](const std::vector<void*>& args, void* out)
                                 {
                                     (*static_cast<int*>(out)) = 6;
                                 }
@@ -567,7 +567,7 @@ int main()
                             .WhenCalledWith(2, SO_ANY)
                             .WhenCalledExpectedly_Do
                             (
-                                [&correctPtr, &testClass](std::vector<void*>& args)
+                                [&correctPtr, &testClass](const std::vector<void*>& args)
                                 {
                                     if( args.size() == 2 && 
                                         args[1] == &testClass)
@@ -591,7 +591,7 @@ int main()
                             .WhenCalledWith(2, SO_NonCopyable<NonCopyableTestClass>(testClass))
                             .WhenCalledExpectedly_Do
                             (
-                                [&correctPtr, &testClass](std::vector<void*>& args)
+                                [&correctPtr, &testClass](const std::vector<void*>& args)
                                 {
                                     if( args.size() == 2 && 
                                         args[1] == &testClass)
@@ -617,7 +617,7 @@ int main()
                         .WhenCalledWith(2, SO_ANY)
                         .WhenCalledExpectedly_Do
                         (
-                            [&correctPtr, &testClass](std::vector<void*>& args)
+                            [&correctPtr, &testClass](const std::vector<void*>& args)
                             {
                                 if( args.size() == 2 && 
                                     args[1] == &testClass)

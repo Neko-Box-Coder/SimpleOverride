@@ -10,7 +10,7 @@ namespace SimpleOverride
 {
     struct Internal_ConditionInfo
     {
-        std::function<bool(std::vector<void*>& args)> DataCondition;
+        std::function<bool(const std::vector<void*>& args)> DataCondition;
         std::vector<ArgInfo> ArgsCondition = {};
         int Times = -1;
         int CalledTimes = 0;

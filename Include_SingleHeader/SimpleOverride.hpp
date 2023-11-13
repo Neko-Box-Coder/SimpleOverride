@@ -189,7 +189,7 @@ class SimpleOverride
                 {}
                 
                 template<typename T>
-                ArgumentsProxy& SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction);
+                ArgumentsProxy& SetArgByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction);
                 
                 template<typename... Args>
                 ArgumentsProxy& SetArgs(Args... args);
@@ -292,7 +292,7 @@ class SimpleOverride
         //Methods for setting arguments data
         //------------------------------------------------------------------------------
         template<typename T>
-        inline ArgumentsProxy& SetArgsByAction( ArgumentsProxy& proxy,
+        inline ArgumentsProxy& SetArgByAction( ArgumentsProxy& proxy,
                                                                 std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
         {
             ArgumentsData& lastData = OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
@@ -1414,9 +1414,9 @@ inline SimpleOverride::ReturnProxy& SimpleOverride::ReturnProxy::Returns(T retur
 }
 
 template<typename T>
-inline SimpleOverride::ArgumentsProxy& SimpleOverride::ArgumentsProxy::SetArgsByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
+inline SimpleOverride::ArgumentsProxy& SimpleOverride::ArgumentsProxy::SetArgByAction(std::function<void(std::vector<void*>& args, void* out)> setArgsAction)
 {
-    return SimpleOverrideObj.SetArgsByAction<T>(*this, setArgsAction);
+    return SimpleOverrideObj.SetArgByAction<T>(*this, setArgsAction);
 }
         
 template<typename... Args>
@@ -1595,10 +1595,10 @@ do\
 //Argument Macros
 //-------------------------------------------------------
 
-#define SO_MODIFY_ARGUMENTS_IF_FOUND(overrideObjName, functionSig, ...)\
+#define SO_MODIFY_ARGS_IF_FOUND(overrideObjName, functionSig, ...)\
     SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, __VA_ARGS__)
         
-#define SO_MODIFY_ARGUMENTS_AND_RETURN_IF_FOUND(overrideObjName, returnValue, functionSig, ...)\
+#define SO_MODIFY_ARGS_AND_RETURN_IF_FOUND(overrideObjName, returnValue, functionSig, ...)\
 do\
 {\
     if(SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, __VA_ARGS__))\

@@ -9,8 +9,8 @@ namespace SimpleOverride
     struct ArgInfo
     {
         void* ArgData = nullptr;
-        std::function<void*(void*)> CopyConstructor;
-        std::function<void(void*)> Destructor;
+        std::function<void*(void* data)> CopyConstructor;
+        std::function<void(void* data)> Destructor;
         size_t ArgSize = 0;
         size_t ArgTypeHash = 0;
         bool ArgSet = false;

@@ -13,7 +13,7 @@ namespace SimpleOverride
         void* Data = nullptr;
         std::function<void*(void*)> CopyConstructor;
         std::function<void(void*)> Destructor;
-        std::function<void(std::vector<void*>& args, void* out)> DataAction;
+        std::function<void(const std::vector<void*>& args, void* out)> DataAction;
         bool DataSet = false;
         bool DataActionSet = false;
     };

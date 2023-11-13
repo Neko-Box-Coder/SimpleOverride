@@ -17,7 +17,7 @@ namespace SimpleOverride
     //using CommonProxy = SimpleOverrideCommonProxy<DeriveType>;
 
     template<typename T>
-    inline ReturnProxy& ReturnProxy::ReturnsByAction(std::function<void(std::vector<void*>& args, 
+    inline ReturnProxy& ReturnProxy::ReturnsByAction(std::function<void(const std::vector<void*>& args, 
                                                                         void* out)> returnAction)
     {
         return SimpleOverrideObj.ReturnsByAction<T>(*this, returnAction);
@@ -31,10 +31,10 @@ namespace SimpleOverride
 
     template<typename T>
     inline ArgumentsProxy& 
-        ArgumentsProxy::SetArgsByAction(std::function<void( std::vector<void*>& args, 
+        ArgumentsProxy::SetArgByAction(std::function<void( const std::vector<void*>& args, 
                                                             void* out)> setArgsAction)
     {
-        return SimpleOverrideObj.SetArgsByAction<T>(*this, setArgsAction);
+        return SimpleOverrideObj.SetArgByAction<T>(*this, setArgsAction);
     }
             
     template<typename... Args>
@@ -58,21 +58,21 @@ namespace SimpleOverride
 
     template<typename DeriveType>
     inline DeriveType& 
-        CommonProxy<DeriveType>::If(std::function<bool(std::vector<void*>& args)> condition)
+        CommonProxy<DeriveType>::If(std::function<bool(const std::vector<void*>& args)> condition)
     {
         return SimpleOverrideObj.If(*this, condition);
     }
 
     template<typename DeriveType>
     inline DeriveType& 
-        CommonProxy<DeriveType>::Otherwise_Do(std::function<void(std::vector<void*>& args)> action)
+        CommonProxy<DeriveType>::Otherwise_Do(std::function<void(const std::vector<void*>& args)> action)
     {
         return SimpleOverrideObj.Otherwise_Do(*this, action);
     }
 
     template<typename DeriveType>
     inline DeriveType& 
-        CommonProxy<DeriveType>::WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action)
+        CommonProxy<DeriveType>::WhenCalledExpectedly_Do(std::function<void(const std::vector<void*>& args)> action)
     {
         return SimpleOverrideObj.WhenCalledExpectedly_Do(*this, action);
     }

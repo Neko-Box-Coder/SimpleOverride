@@ -8,6 +8,7 @@
 
 const SimpleOverride::Any SO_ANY;
 const SimpleOverride::Any SO_DONT_SET;
+const SimpleOverride::Any SO_DONT_OVERRIDE_RETURN;
 
 template<typename T>
 using SO_NonCopyable = SimpleOverride::NonCopyable<T>;

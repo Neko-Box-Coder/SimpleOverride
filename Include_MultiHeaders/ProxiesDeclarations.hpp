@@ -17,7 +17,7 @@ namespace SimpleOverride
     {
         friend class Overrider;
         friend class Internal_ReturnDataSetter;
-        friend class Internal_ArgumentDataSetter;
+        friend class Internal_ArgsDataSetter;
         friend class Internal_RequirementSetter;
         
         protected:
@@ -38,11 +38,11 @@ namespace SimpleOverride
             template<typename... Args>
             DeriveType& WhenCalledWith(Args... args);
             
-            DeriveType& If(std::function<bool(std::vector<void*>& args)> condition);
+            DeriveType& If(std::function<bool(const std::vector<void*>& args)> condition);
 
-            DeriveType& Otherwise_Do(std::function<void(std::vector<void*>& args)> action);
+            DeriveType& Otherwise_Do(std::function<void(const std::vector<void*>& args)> action);
 
-            DeriveType& WhenCalledExpectedly_Do(std::function<void(std::vector<void*>& args)> action);
+            DeriveType& WhenCalledExpectedly_Do(std::function<void(const std::vector<void*>& args)> action);
     };
 
     //Override return proxy class for method chaining
@@ -57,7 +57,7 @@ namespace SimpleOverride
             {}
             
             template<typename T>
-            ReturnProxy& ReturnsByAction(std::function<void(std::vector<void*>& args, 
+            ReturnProxy& ReturnsByAction(std::function<void(const std::vector<void*>& args, 
                                                             void* out)> returnAction);
             
             template<typename T>
@@ -76,8 +76,8 @@ namespace SimpleOverride
             {}
             
             template<typename T>
-            ArgumentsProxy& SetArgsByAction(std::function<void( std::vector<void*>& args, 
-                                                                void* out)> setArgsAction);
+            ArgumentsProxy& SetArgByAction(std::function<void( const std::vector<void*>& args, 
+                                                                void* currentArg)> setArgsAction);
             
             template<typename... Args>
             ArgumentsProxy& SetArgs(Args... args);

@@ -9,7 +9,7 @@
 #include "./NonComparableCopyable.hpp"
 #include "./Any.hpp"
 #include "./Internal_ReturnDataSetter.hpp"
-#include "./Internal_ArgumentDataSetter.hpp"
+#include "./Internal_ArgsDataSetter.hpp"
 #include "./Internal_RequirementSetter.hpp"
 #include "./Internal_ArgsValuesAppender.hpp"
 #include "./Internal_ArgsTypeInfoAppender.hpp"
@@ -25,7 +25,7 @@
 namespace SimpleOverride
 {
     class Overrider :   public Internal_ReturnDataSetter, 
-                        public Internal_ArgumentDataSetter,
+                        public Internal_ArgsDataSetter,
                         public Internal_RequirementSetter,
                         public Internal_ArgsValuesAppender,
                         public Internal_ArgsTypeInfoAppender,
@@ -45,7 +45,7 @@ namespace SimpleOverride
         public:
             inline Overrider(const Overrider& other) :
                 Internal_ReturnDataSetter(OverrideReturnInfos),
-                Internal_ArgumentDataSetter(OverrideArgumentsInfos),
+                Internal_ArgsDataSetter(OverrideArgumentsInfos),
                 Internal_RequirementSetter( OverrideArgumentsInfos,
                                             OverrideReturnInfos),
                 Internal_ReturnDataRetriever(OverrideReturnInfos, *this, *this, *this),
@@ -136,7 +136,7 @@ namespace SimpleOverride
             }
                 
             inline Overrider() :    Internal_ReturnDataSetter(OverrideReturnInfos),
-                                    Internal_ArgumentDataSetter(OverrideArgumentsInfos),
+                                    Internal_ArgsDataSetter(OverrideArgumentsInfos),
                                     Internal_RequirementSetter( OverrideArgumentsInfos,
                                                                 OverrideReturnInfos),
                                     Internal_ReturnDataRetriever(   OverrideReturnInfos, 
@@ -299,7 +299,7 @@ namespace SimpleOverride
                 #endif
 
                 OverrideArgumentsInfos[functionName].ArgumentsDatas
-                                                    .push_back(Internal_ArgumentsData());
+                                                    .push_back(Internal_ArgsData());
                 
                 return ArgumentsProxy(functionName, *this, ProxyType::ARGS);
             }
@@ -336,7 +336,7 @@ namespace SimpleOverride
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    Internal_ArgumentsData& correctData = 
+                    Internal_ArgsData& correctData = 
                         OverrideArgumentsInfos[functionName].ArgumentsDatas[correctDataIndex];
                     
                     correctData.ArgumentsConditionInfo.CalledTimes++;
