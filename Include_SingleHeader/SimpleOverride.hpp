@@ -259,7 +259,7 @@ class SimpleOverride
     //==============================================================================
     private:
         #define INTERNAL_SO_UNCONST(targetType) typename std::remove_const<targetType>::type
-        #define INTERNAL_SO_PURE_T INTERNAL_SO_UNCONST(T)
+        #define INTERNAL_SO_NON_CONST_T INTERNAL_SO_UNCONST(T)
     
         //------------------------------------------------------------------------------
         //Methods for setting return data
@@ -497,7 +497,7 @@ class SimpleOverride
         inline DeriveType& WhenCalledWith(CommonProxy<DeriveType>& proxy, NonCopyable<T> arg, Args... args)
         {
             ArgInfo curArg;
-            curArg.ArgData = const_cast<INTERNAL_SO_PURE_T*>(arg.ReferenceVar);
+            curArg.ArgData = const_cast<INTERNAL_SO_NON_CONST_T*>(arg.ReferenceVar);
             curArg.CopyConstructor = [](void* data) { return data; };
             curArg.Destructor = [](void* data){ };
             curArg.ArgSize = sizeof(T);
@@ -612,28 +612,28 @@ class SimpleOverride
         template<typename T, typename... Args>
         inline void AppendArguments(std::vector<void*>& argumentsList, T& arg, Args&... args)
         {
-            argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+            argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
             AppendArguments(argumentsList, args...);
         }
         
         template<typename T, typename... Args>
         inline void AppendArguments(std::vector<void*>& argumentsList, NonCopyable<T>& arg, Args&... args)
         {
-            argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+            argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
             AppendArguments(argumentsList, args...);
         }
         
         template<typename T, typename... Args>
         inline void AppendArguments(std::vector<void*>& argumentsList, NonComparable<T>& arg, Args&... args)
         {
-            argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+            argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
             AppendArguments(argumentsList, args...);
         }
         
         template<typename T, typename... Args>
         inline void AppendArguments(std::vector<void*>& argumentsList, NonComparableCopyable<T>& arg, Args&... args)
         {
-            argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+            argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
             AppendArguments(argumentsList, args...);
         }
         
@@ -645,8 +645,8 @@ class SimpleOverride
             ArgInfo curArgInfo;
             if(!std::is_same<T, Any>())
             {
-                curArgInfo.ArgSize = sizeof(INTERNAL_SO_PURE_T);
-                curArgInfo.ArgTypeHash = typeid(INTERNAL_SO_PURE_T).hash_code();
+                curArgInfo.ArgSize = sizeof(INTERNAL_SO_NON_CONST_T);
+                curArgInfo.ArgTypeHash = typeid(INTERNAL_SO_NON_CONST_T).hash_code();
                 curArgInfo.ArgSet = true;
             }
 
@@ -657,19 +657,19 @@ class SimpleOverride
         template<typename T, typename... Args>
         inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, NonCopyable<T>& arg, Args&... args)
         {
-            AppendDereferenceArgsInfo(argumentsList, (INTERNAL_SO_PURE_T&)arg, args...);
+            AppendDereferenceArgsInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
         }
         
         template<typename T, typename... Args>
         inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, NonComparable<T>& arg, Args&... args)
         {
-            AppendDereferenceArgsInfo(argumentsList, (INTERNAL_SO_PURE_T&)arg, args...);
+            AppendDereferenceArgsInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
         }
         
         template<typename T, typename... Args>
         inline void AppendDereferenceArgsInfo(std::vector<ArgInfo>& argumentsList, NonComparableCopyable<T>& arg, Args&... args)
         {
-            AppendDereferenceArgsInfo(argumentsList, (INTERNAL_SO_PURE_T&)arg, args...);
+            AppendDereferenceArgsInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
         }
         
         template<   typename T, 
@@ -697,29 +697,29 @@ class SimpleOverride
 
             if(argumentsListToCheck[argIndex].ArgSet)
             {
-                if(sizeof(INTERNAL_SO_PURE_T) != argumentsListToCheck[argIndex].ArgSize)
+                if(sizeof(INTERNAL_SO_NON_CONST_T) != argumentsListToCheck[argIndex].ArgSize)
                 {
                     #if SO_LOG_CheckArguments
-                        std::cout <<"sizeof(INTERNAL_SO_PURE_T): "<<sizeof(INTERNAL_SO_PURE_T)<<"\n";
+                        std::cout <<"sizeof(INTERNAL_SO_NON_CONST_T): "<<sizeof(INTERNAL_SO_NON_CONST_T)<<"\n";
                         std::cout <<"sizeof(T): "<<sizeof(T)<<"\n";
                         std::cout <<"argumentsListToCheck["<<argIndex<<"].ArgSize: "<<argumentsListToCheck[argIndex].ArgSize<<"\n";
                     #endif
                     return false;
                 }
 
-                if(typeid(INTERNAL_SO_PURE_T).hash_code() != argumentsListToCheck[argIndex].ArgTypeHash)
+                if(typeid(INTERNAL_SO_NON_CONST_T).hash_code() != argumentsListToCheck[argIndex].ArgTypeHash)
                 {
                     #if SO_LOG_CheckArguments
-                        std::cout <<"typeid(INTERNAL_SO_PURE_T).hash_code(): "<<typeid(INTERNAL_SO_PURE_T).hash_code()<<"\n";
+                        std::cout <<"typeid(INTERNAL_SO_NON_CONST_T).hash_code(): "<<typeid(INTERNAL_SO_NON_CONST_T).hash_code()<<"\n";
                         std::cout <<"argumentsListToCheck["<<argIndex<<"].ArgTypeHash: "<<argumentsListToCheck[argIndex].ArgTypeHash<<"\n";
                     #endif
                     return false;
                 }
 
-                if(arg != *reinterpret_cast<INTERNAL_SO_PURE_T*>(argumentsListToCheck[argIndex].ArgData))
+                if(arg != *reinterpret_cast<INTERNAL_SO_NON_CONST_T*>(argumentsListToCheck[argIndex].ArgData))
                 {
                     #if SO_LOG_CheckArguments
-                        std::cout <<"arg != *reinterpret_cast<INTERNAL_SO_PURE_T*>(argumentsListToCheck[argIndex].ArgData\n";
+                        std::cout <<"arg != *reinterpret_cast<INTERNAL_SO_NON_CONST_T*>(argumentsListToCheck[argIndex].ArgData\n";
                     #endif
                     return false;
                 }
@@ -788,7 +788,7 @@ class SimpleOverride
         template<typename T, typename... Args>
         inline bool CheckArguments(std::vector<ArgInfo>& argumentsListToCheck, int argIndex, const T& arg, Args&... args)
         {
-            return CheckArguments(argumentsListToCheck, argIndex, const_cast<INTERNAL_SO_PURE_T&>(arg), args...);
+            return CheckArguments(argumentsListToCheck, argIndex, const_cast<INTERNAL_SO_NON_CONST_T&>(arg), args...);
         }
         
         #define SO_LOG_GetCorrectReturnDataInfo 0
@@ -830,7 +830,7 @@ class SimpleOverride
                 }
             
                 //Check return type
-                if(curReturnDatas[i].ReturnDataInfo.DataType != typeid(INTERNAL_SO_PURE_T).hash_code())
+                if(curReturnDatas[i].ReturnDataInfo.DataType != typeid(INTERNAL_SO_NON_CONST_T).hash_code())
                 {
                     #if SO_LOG_GetCorrectReturnDataInfo
                         std::cout << "Failed at return type\n";
@@ -1024,8 +1024,8 @@ class SimpleOverride
         
             if(argsData[index].DataSet)
             {
-                INTERNAL_SO_PURE_T& pureArg = const_cast<INTERNAL_SO_PURE_T&>(arg); 
-                pureArg = *static_cast<INTERNAL_SO_PURE_T*>(argsData[index].Data);
+                INTERNAL_SO_NON_CONST_T& pureArg = const_cast<INTERNAL_SO_NON_CONST_T&>(arg); 
+                pureArg = *static_cast<INTERNAL_SO_NON_CONST_T*>(argsData[index].Data);
                 #if SO_LOG_ModifyArgs
                     std::cout << "modified index: "<<index << std::endl;
                     std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
@@ -1040,7 +1040,7 @@ class SimpleOverride
                 #endif
             }
             else
-                argsData[index].DataAction(argumentsList, &const_cast<INTERNAL_SO_PURE_T&>(arg));
+                argsData[index].DataAction(argumentsList, &const_cast<INTERNAL_SO_NON_CONST_T&>(arg));
 
             ModifyArgs(argumentsList, argsData, ++index, args...);
         }
@@ -1064,8 +1064,8 @@ class SimpleOverride
 
             if(argsData[index].DataSet)
             {
-                INTERNAL_SO_PURE_T& pureArg = (INTERNAL_SO_PURE_T&)(arg); 
-                pureArg = *static_cast<INTERNAL_SO_PURE_T*>(argsData[index].Data);
+                INTERNAL_SO_NON_CONST_T& pureArg = (INTERNAL_SO_NON_CONST_T&)(arg); 
+                pureArg = *static_cast<INTERNAL_SO_NON_CONST_T*>(argsData[index].Data);
                 #if SO_LOG_ModifyArgs
                     std::cout << "argsData[index].DataType: " << argsData[index].DataType <<std::endl;
                     std::cout << "modified value: "<< (*static_cast<T*>(argsData[index].Data)) << std::endl << std::endl;
@@ -1076,7 +1076,7 @@ class SimpleOverride
                 #endif
             }
             else
-                argsData[index].DataAction(argumentsList, &((INTERNAL_SO_PURE_T&)(arg)));
+                argsData[index].DataAction(argumentsList, &((INTERNAL_SO_NON_CONST_T&)(arg)));
 
             ModifyArgs(argumentsList, argsData, ++index, args...);
         }
@@ -1134,7 +1134,7 @@ class SimpleOverride
             else
             {
                 std::cout << "[WARNING] DataAction is called on const argument, is this intentional?" << std::endl;
-                argsData[index].DataAction(argumentsList, &((INTERNAL_SO_PURE_T&)(arg)));
+                argsData[index].DataAction(argumentsList, &((INTERNAL_SO_NON_CONST_T&)(arg)));
             }
             
             ModifyArgs(argumentsList, argsData, ++index, args...);

@@ -1,13 +1,14 @@
 #ifndef SO_INTERNAL_ARGUMENT_DATA_SETTER_HPP
 #define SO_INTERNAL_ARGUMENT_DATA_SETTER_HPP
 
-#include "./Internal_OverrideArgumentInfo.hpp"
+#include "./Internal_OverrideArgsDataList.hpp"
 #include "./ProxiesDeclarations.hpp"
 #include "./Any.hpp"
 #include "./NonComparable.hpp"
 #include "./NonCopyable.hpp"
 #include "./NonComparableCopyable.hpp"
 #include "./StaticAssertFalse.hpp"
+#include "./PureType.hpp"
 
 #include <iostream>
 #include <string>
@@ -20,26 +21,10 @@ namespace SimpleOverride
         friend class ArgumentsProxy;
         
         public:
-            using ArgumentInfosType = std::unordered_map<std::string, Internal_OverrideArgumentInfo>;
+            using ArgumentInfosType = std::unordered_map<std::string, Internal_OverrideArgsDataList>;
         
         protected:
             ArgumentInfosType& OverrideArgumentsInfos;
-            
-            template<typename T>
-            inline ArgumentsProxy& SetArgByAction( ArgumentsProxy& proxy,
-                                                    std::function<void( const std::vector<void*>& args, 
-                                                                        void* currentArg)> setArgsAction)
-            {
-                Internal_ArgsData& lastData = 
-                    OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
-                
-                lastData.ArgumentsDataInfo.push_back(Internal_DataInfo());
-                
-                lastData.ArgumentsDataInfo.back().DataAction = setArgsAction;
-                lastData.ArgumentsDataInfo.back().DataActionSet = true;
-                lastData.ArgumentsDataInfo.back().DataType = typeid(T).hash_code();
-                return proxy;
-            }
             
             inline ArgumentsProxy& SetArgs(ArgumentsProxy& proxy)
             {
@@ -62,9 +47,9 @@ namespace SimpleOverride
             
             template<typename T, typename... Args>
             inline ArgumentsProxy& SetArgs( ArgumentsProxy& proxy,
-                                                            T arg, Args... args)
+                                            T arg, Args... args)
             {
-                Internal_ArgsData& lastData = 
+                Internal_OverrideArgsData& lastData = 
                     OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
                 
                 lastData.ArgumentsDataInfo.push_back(Internal_DataInfo());
@@ -135,6 +120,118 @@ namespace SimpleOverride
                 return SetArgs(proxy, args...);
             }
         
+            template<typename Arg1Type>
+            inline ArgumentsProxy& 
+                SetArgsByAction(ArgumentsProxy& proxy,
+                                std::function<void(std::vector<void*>& args)> setArgsAction)
+            {
+                Internal_OverrideArgsData& lastData = 
+                    OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();
+                
+                lastData.ArgumentsDataActionInfo.DataAction = setArgsAction;
+                lastData.ArgumentsDataActionInfo.DataActionSet = true;
+                lastData.ArgumentsDataActionInfo.DataTypes
+                        .push_back(typeid(INTERNAL_SO_PURE_TYPE(Arg1Type)).hash_code());
+                
+                return proxy;
+            }
+            
+            #ifndef SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL
+            #define SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(...)\
+                template<__VA_ARGS__>\
+                inline ArgumentsProxy& \
+                    SetArgsByAction(ArgumentsProxy& proxy,\
+                                    std::function<void(std::vector<void*>& args)> setArgsAction)\
+                {\
+                    SetArgsByAction<
+            #endif
+            
+            #ifndef SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1
+            #define SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(...)\
+                                    __VA_ARGS__>(proxy, setArgsAction);\
+                Internal_OverrideArgsData& lastData = \
+                    OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back();\
+                lastData.ArgumentsDataActionInfo\
+                        .DataTypes\
+                        .push_back(typeid(
+            #endif
+            
+            #ifndef SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2
+            #define SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(_1)\
+                                            INTERNAL_SO_PURE_TYPE(_1)).hash_code());\
+                return proxy;\
+            }
+            #endif
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(Arg1Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg2Type)
+        
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(Arg1Type, Arg2Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg3Type)
+        
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(Arg1Type, Arg2Type, Arg3Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg4Type)
+        
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(Arg1Type, Arg2Type, Arg3Type, Arg4Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg5Type)
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg6Type)
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type,
+                                                typename Arg7Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(  Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type, 
+                                                    Arg6Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg7Type)
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type,
+                                                typename Arg7Type, typename Arg8Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(  Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type, 
+                                                    Arg6Type, Arg7Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg8Type)
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type,
+                                                typename Arg7Type, typename Arg8Type, typename Arg9Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(  Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type, 
+                                                    Arg6Type, Arg7Type, Arg8Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg9Type)
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type,
+                                                typename Arg7Type, typename Arg8Type, typename Arg9Type,
+                                                typename Arg10Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(  Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type, 
+                                                    Arg6Type, Arg7Type, Arg8Type, Arg9Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg10Type)
+            
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type,
+                                                typename Arg7Type, typename Arg8Type, typename Arg9Type,
+                                                typename Arg10Type, typename Arg11Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(  Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type, 
+                                                    Arg6Type, Arg7Type, Arg8Type, Arg9Type, Arg10Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg11Type)
+
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL(typename Arg1Type, typename Arg2Type, typename Arg3Type,
+                                                typename Arg4Type, typename Arg5Type, typename Arg6Type,
+                                                typename Arg7Type, typename Arg8Type, typename Arg9Type,
+                                                typename Arg10Type, typename Arg11Type, typename Arg12Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_1(  Arg1Type, Arg2Type, Arg3Type, Arg4Type, Arg5Type, 
+                                                    Arg6Type, Arg7Type, Arg8Type, Arg9Type, Arg10Type,
+                                                    Arg11Type)
+            SO_INTERNAL_SET_ARGS_BY_ACTION_IMPL_2(Arg12Type)
+
         public:
             inline Internal_ArgsDataSetter(ArgumentInfosType& overrideArgumentsInfos) : 
                 OverrideArgumentsInfos(overrideArgumentsInfos)

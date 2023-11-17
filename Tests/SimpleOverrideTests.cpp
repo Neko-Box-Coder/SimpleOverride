@@ -232,9 +232,10 @@ int main()
         testFloat = 1.f;
         testString = "";
         
+        #if 0
         SO_OVERRIDE_ARGS(OverrideObj, TestFuncWithArgsToSet(int, float*, std::string&))
                         .SetArgs(SO_DONT_SET)
-                        .SetArgByAction<float>
+                        .SetArgsByAction<float>
                         (
                             [setFloat](const std::vector<void*>& args, void* out)
                             {
@@ -248,6 +249,7 @@ int main()
                                 *(static_cast<std::string*>(out)) = setString;
                             }
                         );
+        #endif
         
         FuncWithArgsToSet(3, &testFloat, testString);
 

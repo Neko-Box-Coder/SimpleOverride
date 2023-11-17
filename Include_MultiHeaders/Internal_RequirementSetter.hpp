@@ -2,8 +2,8 @@
 #define SO_INTERNAL_REQUIREMENT_SETTER_HPP
 
 #include "./ProxiesDeclarations.hpp"
-#include "./Internal_OverrideArgumentInfo.hpp"
-#include "./Internal_OverrideReturnDataInfo.hpp"
+#include "./Internal_OverrideArgsDataList.hpp"
+#include "./Internal_OverrideReturnDataList.hpp"
 #include "./StaticAssertFalse.hpp"
 #include "./Any.hpp"
 #include "./NonComparable.hpp"
@@ -24,8 +24,8 @@ namespace SimpleOverride
         friend class CommonProxy<ArgumentsProxy>;
 
         protected:
-            using ReturnInfosType = std::unordered_map<std::string, Internal_OverrideReturnDataInfo>;
-            using ArgumentInfosType = std::unordered_map<std::string, Internal_OverrideArgumentInfo>;
+            using ReturnInfosType = std::unordered_map<std::string, Internal_OverrideReturnDataList>;
+            using ArgumentInfosType = std::unordered_map<std::string, Internal_OverrideArgsDataList>;
             
             ArgumentInfosType& OverrideArgumentsInfos;
             ReturnInfosType& OverrideReturnInfos;
@@ -135,7 +135,7 @@ namespace SimpleOverride
                                                 Args... args)
             {
                 ArgInfo curArg;
-                curArg.ArgData = const_cast<INTERNAL_SO_PURE_T*>(arg.ReferenceVar);
+                curArg.ArgData = const_cast<INTERNAL_SO_NON_CONST_T*>(arg.ReferenceVar);
                 curArg.CopyConstructor = [](void* data) { return data; };
                 curArg.Destructor = [](void* data){ };
                 curArg.ArgSize = sizeof(T);

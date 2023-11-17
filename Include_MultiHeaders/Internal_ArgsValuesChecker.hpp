@@ -38,12 +38,12 @@ namespace SimpleOverride
 
                 if(validArgumentsList[argIndex].ArgSet)
                 {
-                    if(arg != *reinterpret_cast<INTERNAL_SO_PURE_T*>
+                    if(arg != *reinterpret_cast<INTERNAL_SO_NON_CONST_T*>
                                 (validArgumentsList[argIndex].ArgData))
                     {
                         #if SO_LOG_CheckArgumentsValues
                             std::cout << 
-                            "arg != *reinterpret_cast<INTERNAL_SO_PURE_T*>\
+                            "arg != *reinterpret_cast<INTERNAL_SO_NON_CONST_T*>\
                             (validArgumentsList[argIndex].ArgData\n";
                         
                         #endif
@@ -138,7 +138,7 @@ namespace SimpleOverride
             {
                 return CheckArgumentsValues(validArgumentsList, 
                                             argIndex, 
-                                            const_cast<INTERNAL_SO_PURE_T&>(arg), 
+                                            const_cast<INTERNAL_SO_NON_CONST_T&>(arg), 
                                             args...);
             }
     };

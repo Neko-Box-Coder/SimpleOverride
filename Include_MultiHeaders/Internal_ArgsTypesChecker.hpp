@@ -38,11 +38,11 @@ namespace SimpleOverride
 
                 if(validArgumentsList[argIndex].ArgSet)
                 {
-                    if(sizeof(INTERNAL_SO_PURE_T) != validArgumentsList[argIndex].ArgSize)
+                    if(sizeof(INTERNAL_SO_NON_CONST_T) != validArgumentsList[argIndex].ArgSize)
                     {
                         #if SO_LOG_CheckArguments
-                            std::cout <<    "sizeof(INTERNAL_SO_PURE_T): " <<
-                                            sizeof(INTERNAL_SO_PURE_T) <<
+                            std::cout <<    "sizeof(INTERNAL_SO_NON_CONST_T): " <<
+                                            sizeof(INTERNAL_SO_NON_CONST_T) <<
                                             "\n";
                             
                             std::cout << "sizeof(T): "<<sizeof(T)<<"\n";
@@ -55,12 +55,12 @@ namespace SimpleOverride
                         return false;
                     }
 
-                    if(typeid(INTERNAL_SO_PURE_T).hash_code() != 
+                    if(typeid(INTERNAL_SO_NON_CONST_T).hash_code() != 
                             validArgumentsList[argIndex].ArgTypeHash)
                     {
                         #if SO_LOG_CheckArguments
-                            std::cout <<    "typeid(INTERNAL_SO_PURE_T).hash_code(): " <<
-                                            typeid(INTERNAL_SO_PURE_T).hash_code() << 
+                            std::cout <<    "typeid(INTERNAL_SO_NON_CONST_T).hash_code(): " <<
+                                            typeid(INTERNAL_SO_NON_CONST_T).hash_code() << 
                                             "\n";
                             
                             std::cout <<    "validArgumentsList["
@@ -160,7 +160,7 @@ namespace SimpleOverride
             {
                 return CheckArgumentsTypes( validArgumentsList, 
                                             argIndex, 
-                                            const_cast<INTERNAL_SO_PURE_T&>(arg), 
+                                            const_cast<INTERNAL_SO_NON_CONST_T&>(arg), 
                                             args...);
             }
     };

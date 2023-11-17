@@ -11,14 +11,14 @@ extern SimpleOverride::Overrider OverrideObj;
 
 inline int FuncWithoutArgs()
 {
-    SO_RETURN_IF_FOUND(OverrideObj, TestFuncWithoutArgs(), int);
+    SO_RETURN_IF_FOUND(OverrideObj, FuncWithoutArgs(), int);
     return -1;
 }
 
 inline int FuncWithArgs(int testArg, bool testArg2, float testArg3)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
-                        TestFuncWithArgs(int, bool, float), 
+                        FuncWithArgs(int, bool, float), 
                         int, 
                         testArg, 
                         testArg2, 
@@ -29,7 +29,7 @@ inline int FuncWithArgs(int testArg, bool testArg2, float testArg3)
 inline int FuncWithConstArgs(const int testArg, const bool testArg2, float testArg3)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
-                        TestFuncWithConstArgs(const int, const bool, float), 
+                        FuncWithConstArgs(const int, const bool, float), 
                         int, 
                         testArg, 
                         testArg2, 
@@ -39,14 +39,14 @@ inline int FuncWithConstArgs(const int testArg, const bool testArg2, float testA
 
 inline void* FuncWIthVoidPointer(int testArg, void* testArg2)
 {
-    SO_RETURN_IF_FOUND(OverrideObj, TestFuncWIthVoidPointer(int, void*), void*, testArg, testArg2);
+    SO_RETURN_IF_FOUND(OverrideObj, FuncWIthVoidPointer(int, void*), void*, testArg, testArg2);
     return nullptr;
 }
 
 inline void FuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
 {
     SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    TestFuncWithArgsToSet(int, float*, std::string&), 
+                                    FuncWithArgsToSet(int, float*, std::string&), 
                                     testArg, 
                                     testArg2, 
                                     testArg3);
@@ -57,7 +57,7 @@ inline void FuncWithConstArgsAndArgsToSet(  const int testArg,
                                                 std::string& testArg3)
 {
     SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    TestFuncWithConstArgsAndArgsToSet(  const int, 
+                                    FuncWithConstArgsAndArgsToSet(  const int, 
                                                                         const float, 
                                                                         std::string&), 
                                     testArg, 
@@ -69,7 +69,7 @@ inline int FuncWithNonCopyableNonComparableArg( int testArg,
                                                     ComplexClass& nonCopyableComparableArg)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
-                        TestFuncWithNonCopyableArg(int, ComplexClass&), 
+                        FuncWithNonCopyableArg(int, ComplexClass&), 
                         int, 
                         testArg, 
                         (SO_NonComparableCopyable<ComplexClass>&)nonCopyableComparableArg);
@@ -79,7 +79,7 @@ inline int FuncWithNonCopyableNonComparableArg( int testArg,
 inline int FuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyableArg)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
-                        TestFuncWithNonCopyableArg(int, NonCopyableTestClass&), 
+                        FuncWithNonCopyableArg(int, NonCopyableTestClass&), 
                         int, 
                         testArg, 
                         (SO_NonCopyable<NonCopyableTestClass>&)nonCopyableArg);
@@ -90,7 +90,7 @@ inline int FuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyable
 inline void FuncWithNonComparableArg(int testArg, NonComparableTestClass& nonComparableArg)
 {
     SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    TestFuncWithNonComparableArg(int, NonComparableTestClass&), 
+                                    FuncWithNonComparableArg(int, NonComparableTestClass&), 
                                     testArg, 
                                     (SO_NonComparable<NonComparableTestClass>&)nonComparableArg);
 }

@@ -25,8 +25,8 @@ namespace SimpleOverride
                 ArgInfo curArgInfo;
                 if(!std::is_same<T, Any>())
                 {
-                    curArgInfo.ArgSize = sizeof(INTERNAL_SO_PURE_T);
-                    curArgInfo.ArgTypeHash = typeid(INTERNAL_SO_PURE_T).hash_code();
+                    curArgInfo.ArgSize = sizeof(INTERNAL_SO_NON_CONST_T);
+                    curArgInfo.ArgTypeHash = typeid(INTERNAL_SO_NON_CONST_T).hash_code();
                     curArgInfo.ArgSet = true;
                 }
 
@@ -39,7 +39,7 @@ namespace SimpleOverride
                                                 NonCopyable<T>& arg, 
                                                 Args&... args)
             {
-                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_PURE_T&)arg, args...);
+                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
             }
             
             template<typename T, typename... Args>
@@ -47,7 +47,7 @@ namespace SimpleOverride
                                                 NonComparable<T>& arg, 
                                                 Args&... args)
             {
-                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_PURE_T&)arg, args...);
+                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
             }
             
             template<typename T, typename... Args>
@@ -55,7 +55,7 @@ namespace SimpleOverride
                                                 NonComparableCopyable<T>& arg, 
                                                 Args&... args)
             {
-                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_PURE_T&)arg, args...);
+                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
             }
             
             template<   typename T, 

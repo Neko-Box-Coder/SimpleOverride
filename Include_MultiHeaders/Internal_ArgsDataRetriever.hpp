@@ -3,7 +3,7 @@
 
 #include "./Internal_ArgsTypeInfoAppender.hpp"
 #include "./Internal_ArgsValuesAppender.hpp"
-#include "./Internal_OverrideArgumentInfo.hpp"
+#include "./Internal_OverrideArgsDataList.hpp"
 #include "./Internal_ArgsTypesChecker.hpp"
 #include "./Internal_ArgsValuesChecker.hpp"
 
@@ -17,21 +17,21 @@ namespace SimpleOverride
     class Internal_ArgsDataRetriever
     {
         public:
-            using ArgumentInfosType = std::unordered_map<std::string, Internal_OverrideArgumentInfo>;
+            using OverrideArgsDataType = std::unordered_map<std::string, Internal_OverrideArgsDataList>;
         
         protected:
-            ArgumentInfosType& OverrideArgumentsInfos;
+            OverrideArgsDataType& OverrideArgsDatas;
             Internal_ArgsValuesAppender& ArgsValuesAppender;
             Internal_ArgsTypeInfoAppender& ArgsTypeInfoAppender;
             Internal_ArgsTypesChecker& ArgsTypesChecker;
             Internal_ArgsValuesChecker& ArgsValuesChecker;
             
-            #define SO_LOG_GetCorrectArgumentsDataInfo 0
+            #define SO_LOG_GetCorrectArgumentsDataInfo 1
 
             template<typename... Args>
             inline int GetCorrectArgumentsDataInfo(std::string functionName, Args&... args)
             {
-                if(OverrideArgumentsInfos.find(functionName) == OverrideArgumentsInfos.end())
+                if(OverrideArgsDatas.find(functionName) == OverrideArgsDatas.end())
                 {
                     std::cout << "[ERROR] This should be checked before calling this" << std::endl;
                     assert(false);
@@ -48,8 +48,8 @@ namespace SimpleOverride
                 std::vector<ArgInfo> deRefArgumentsList;
                 ArgsTypeInfoAppender.AppendArgsPureTypeInfo(deRefArgumentsList, args...);
                 
-                std::vector<Internal_ArgsData>& curArgData = 
-                    OverrideArgumentsInfos[functionName].ArgumentsDatas;
+                std::vector<Internal_OverrideArgsData>& curArgData = 
+                    OverrideArgsDatas[functionName].ArgumentsDatas;
                 
                 int returnIndex = -1;
                 for(int i = 0; i < curArgData.size(); i++)
@@ -58,8 +58,57 @@ namespace SimpleOverride
                         std::cout << "Checking arg data["<<i<<"]\n";
                     #endif
                     
+                    //Check override argument data types match
+                    int argumentTypeFailedIndex = -1;
+                    
+                    if( curArgData[i].ArgumentsDataActionInfo.DataActionSet && 
+                        curArgData[i].ArgumentsDataActionInfo.DataTypes.size() == 
+                            deRefArgumentsList.size())
+                    {
+                        std::vector<std::size_t>& argTypeHashes = 
+                            curArgData[i].ArgumentsDataActionInfo.DataTypes;
+                        
+                        for(int j = 0; j < argTypeHashes.size(); j++)
+                        {
+                            if(argTypeHashes.at(j) != deRefArgumentsList[j].ArgTypeHash)
+                            {
+                                argumentTypeFailedIndex = j;
+                                
+                                std::cout <<    "argTypeHashes.at(" << j << "): " << 
+                                                argTypeHashes.at(j) << std::endl;
+                                std::cout <<    "deRefArgumentsList[" << j << "].ArgTypeHash: " <<
+                                                deRefArgumentsList[j].ArgTypeHash << std::endl;
+                                
+                                std::cout <<    "typeid(int).hash_code(): " << 
+                                                typeid(int).hash_code() << std::endl;
+                                
+                                std::cout <<    "typeid(float*).hash_code(): " << 
+                                                typeid(float*).hash_code() << std::endl;
+                                
+                                std::cout <<    "typeid(std::string&).hash_code(): " << 
+                                                typeid(std::string&).hash_code() << std::endl;
+                                
+                                break;
+                            }
+                        }
+                    }
                     //Check set argument data counts match
-                    if(curArgData[i].ArgumentsDataInfo.size() != deRefArgumentsList.size())
+                    else if(curArgData[i].ArgumentsDataInfo.size() != deRefArgumentsList.size())
+                    {
+                        for(int j = 0; j < curArgData[i].ArgumentsDataInfo.size(); j++)
+                        {
+                            bool overrideArg =  curArgData[i].ArgumentsDataInfo[j].DataSet;
+
+                            if( overrideArg && 
+                                curArgData[i].ArgumentsDataInfo[j].DataType != 
+                                    deRefArgumentsList[j].ArgTypeHash)
+                            {
+                                argumentTypeFailedIndex = j;
+                                break;
+                            }
+                        }
+                    }
+                    else
                     {
                         #if SO_LOG_GetCorrectArgumentsDataInfo
                             std::cout << "Failed at Check set argument data exist\n";
@@ -67,26 +116,14 @@ namespace SimpleOverride
                         continue;
                     }
                     
-                    //Check override argument data types match
-                    bool argumentTypeFailed = false;
-                    for(int j = 0; j < curArgData[i].ArgumentsDataInfo.size(); j++)
+                    if(argumentTypeFailedIndex >= 0)
                     {
-                        bool overrideArg =  curArgData[i].ArgumentsDataInfo[j].DataSet || 
-                                            curArgData[i].ArgumentsDataInfo[j].DataActionSet;
-                        
-                        if( overrideArg && 
-                            curArgData[i].ArgumentsDataInfo[j].DataType != 
-                                deRefArgumentsList[j].ArgTypeHash)
-                        {
-                            #if SO_LOG_GetCorrectArgumentsDataInfo
-                                std::cout << "Failed at Check arguments types\n";
-                            #endif
-                            argumentTypeFailed = true;
-                            break;
-                        }
-                    }
-                    if(argumentTypeFailed)
+                        #if SO_LOG_GetCorrectArgumentsDataInfo
+                            std::cout <<    "Failed at Check set argument data types at index " <<
+                                            argumentTypeFailedIndex << std::endl;
+                        #endif
                         continue;
+                    }
                     
                     //Check parameter condition types/count match
                     if( !curArgData[i].ArgumentsConditionInfo.ArgsCondition.empty() && 
@@ -158,12 +195,12 @@ namespace SimpleOverride
             }
         
         public:
-            Internal_ArgsDataRetriever( ArgumentInfosType& overrideArgumentsInfos,
+            Internal_ArgsDataRetriever( OverrideArgsDataType& overrideArgumentsInfos,
                                         Internal_ArgsValuesAppender& argsValuesAppender,
                                         Internal_ArgsTypeInfoAppender& argsTypeInfoAppender,
                                         Internal_ArgsTypesChecker& argsTypesChecker,
                                         Internal_ArgsValuesChecker& argsValuesChecker) : 
-                                                OverrideArgumentsInfos(overrideArgumentsInfos),
+                                                OverrideArgsDatas(overrideArgumentsInfos),
                                                 ArgsValuesAppender(argsValuesAppender),
                                                 ArgsTypeInfoAppender(argsTypeInfoAppender),
                                                 ArgsTypesChecker(argsTypesChecker),

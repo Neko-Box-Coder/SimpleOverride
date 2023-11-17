@@ -63,6 +63,9 @@ int main()
                             .Returns(SO_DONT_OVERRIDE_RETURN);
 
         ssTEST_OUTPUT_ASSERT(FuncWithoutArgs() == -1);
+        
+        SO_OVERRIDE_RETURNS (OverrideObj, FuncWithoutArgs())
+                            .Returns(SO_DONT_OVERRIDE_RETURN);
     };
     
     ssTEST_END();

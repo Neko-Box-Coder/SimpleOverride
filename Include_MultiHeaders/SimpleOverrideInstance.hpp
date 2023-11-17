@@ -1,8 +1,8 @@
 #ifndef SO_SIMPLE_OVERRIDE_INSTANCE_HPP
 #define SO_SIMPLE_OVERRIDE_INSTANCE_HPP
 
-#include "./Internal_OverrideReturnDataInfo.hpp"
-#include "./Internal_OverrideArgumentInfo.hpp"
+//#include "./Internal_OverrideReturnDataList.hpp"
+//#include "./Internal_OverrideArgsData.hpp"
 #include "./ProxiesDeclarations.hpp"
 #include "./NonComparable.hpp"
 #include "./NonCopyable.hpp"
@@ -36,8 +36,8 @@ namespace SimpleOverride
                         public Internal_ArgsDataRetriever
     {
         private:
-            std::unordered_map<std::string, Internal_OverrideReturnDataInfo> OverrideReturnInfos;
-            std::unordered_map<std::string, Internal_OverrideArgumentInfo> OverrideArgumentsInfos;
+            std::unordered_map<std::string, Internal_OverrideReturnDataList> OverrideReturnInfos;
+            std::unordered_map<std::string, Internal_OverrideArgsDataList> OverrideArgumentsInfos;
 
         //==============================================================================
         //Public facing methods for overriding returns or arguments
@@ -224,7 +224,7 @@ namespace SimpleOverride
                     std::cout << "functionName.size(): " << functionName.size() << "\n";
                 #endif
 
-                OverrideReturnInfos[functionName].ReturnDatas.push_back(Internal_ReturnData());
+                OverrideReturnInfos[functionName].ReturnDatas.push_back(Internal_OverrideReturnData());
                 return ReturnProxy(functionName, *this, ProxyType::RETURN);
             }
             
@@ -263,7 +263,7 @@ namespace SimpleOverride
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    Internal_ReturnData& correctData = 
+                    Internal_OverrideReturnData& correctData = 
                         OverrideReturnInfos[functionName].ReturnDatas[correctDataIndex];
                     
                     correctData.ReturnConditionInfo.CalledTimes++;
@@ -299,7 +299,7 @@ namespace SimpleOverride
                 #endif
 
                 OverrideArgumentsInfos[functionName].ArgumentsDatas
-                                                    .push_back(Internal_ArgsData());
+                                                    .push_back(Internal_OverrideArgsData());
                 
                 return ArgumentsProxy(functionName, *this, ProxyType::ARGS);
             }
@@ -336,7 +336,7 @@ namespace SimpleOverride
                 bool returnResult = false;
                 if(correctDataIndex != -1)
                 {
-                    Internal_ArgsData& correctData = 
+                    Internal_OverrideArgsData& correctData = 
                         OverrideArgumentsInfos[functionName].ArgumentsDatas[correctDataIndex];
                     
                     correctData.ArgumentsConditionInfo.CalledTimes++;
@@ -344,7 +344,11 @@ namespace SimpleOverride
                     if(correctData.ArgumentsActionInfo.CorrectActionSet)
                         correctData.ArgumentsActionInfo.CorrectAction(argumentsList);
 
-                    ModifyArgs(argumentsList, correctData.ArgumentsDataInfo, 0, args...);
+                    if(correctData.ArgumentsDataActionInfo.DataActionSet)
+                        ModifyArgs(argumentsList, correctData.ArgumentsDataActionInfo);
+                    else
+                        ModifyArgs(argumentsList, correctData.ArgumentsDataInfo, 0, args...);
+                        
                     returnResult = true;
                 }
 

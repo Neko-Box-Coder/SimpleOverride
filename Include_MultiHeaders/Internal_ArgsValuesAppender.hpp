@@ -21,7 +21,7 @@ namespace SimpleOverride
             template<typename T, typename... Args>
             inline void AppendArgsValues(std::vector<void*>& argumentsList, T& arg, Args&... args)
             {
-                argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
                 AppendArgsValues(argumentsList, args...);
             }
             
@@ -30,7 +30,7 @@ namespace SimpleOverride
                                             NonCopyable<T>& arg, 
                                             Args&... args)
             {
-                argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
                 AppendArgsValues(argumentsList, args...);
             }
             
@@ -39,7 +39,7 @@ namespace SimpleOverride
                                             NonComparable<T>& arg, 
                                             Args&... args)
             {
-                argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
                 AppendArgsValues(argumentsList, args...);
             }
             
@@ -48,7 +48,7 @@ namespace SimpleOverride
                                             NonComparableCopyable<T>& arg, 
                                             Args&... args)
             {
-                argumentsList.push_back((INTERNAL_SO_PURE_T*)&arg);
+                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
                 AppendArgsValues(argumentsList, args...);
             }
     };

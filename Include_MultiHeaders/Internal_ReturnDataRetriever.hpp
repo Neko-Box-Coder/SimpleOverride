@@ -1,7 +1,7 @@
 #ifndef SO_INTERNAL_RETURN_DATA_RETRIEVER_HPP
 #define SO_INTERNAL_RETURN_DATA_RETRIEVER_HPP
 
-#include "./Internal_OverrideReturnDataInfo.hpp"
+#include "./Internal_OverrideReturnDataList.hpp"
 #include "./PureType.hpp"
 #include "./Internal_ArgsValuesAppender.hpp"
 #include "./Internal_ArgsTypesChecker.hpp"
@@ -17,7 +17,7 @@ namespace SimpleOverride
     class Internal_ReturnDataRetriever
     {
         public:
-            using ReturnInfosType = std::unordered_map<std::string, Internal_OverrideReturnDataInfo>;
+            using ReturnInfosType = std::unordered_map<std::string, Internal_OverrideReturnDataList>;
 
         protected:
             ReturnInfosType& OverrideReturnInfos;
@@ -44,7 +44,7 @@ namespace SimpleOverride
                 std::vector<void*> argumentsList;
                 ArgsValuesAppender.AppendArgsValues(argumentsList, args...);
                 
-                std::vector<Internal_ReturnData>& curReturnDatas = 
+                std::vector<Internal_OverrideReturnData>& curReturnDatas = 
                     OverrideReturnInfos[functionName].ReturnDatas;
                 
                 int returnIndex = -1;
@@ -60,7 +60,7 @@ namespace SimpleOverride
                     {
                         //Check return type match
                         if(curReturnDatas[i].ReturnDataInfo.DataType != 
-                            typeid(INTERNAL_SO_PURE_T).hash_code())
+                            typeid(INTERNAL_SO_NON_CONST_T).hash_code())
                         {
                             #if SO_LOG_GetCorrectReturnDataInfo
                                 std::cout << "Failed at return type\n";
@@ -86,7 +86,7 @@ namespace SimpleOverride
                     
                     //Check parameter values
                     if( !curReturnDatas[i].ReturnConditionInfo.ArgsCondition.empty() && 
-                        !ArgsTypesChecker.CheckArgumentsTypes(  curReturnDatas[i]   .ReturnConditionInfo
+                        !ArgsValuesChecker.CheckArgumentsValues(curReturnDatas[i]   .ReturnConditionInfo
                                                                                     .ArgsCondition, 
                                                                 0, 
                                                                 args...))

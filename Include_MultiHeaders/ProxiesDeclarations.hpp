@@ -56,12 +56,12 @@ namespace SimpleOverride
                                                                     functionProxyType) 
             {}
             
-            template<typename T>
+            template<typename ReturnType>
             ReturnProxy& ReturnsByAction(std::function<void(const std::vector<void*>& args, 
                                                             void* out)> returnAction);
             
-            template<typename T>
-            ReturnProxy& Returns(T returnData);
+            template<typename ReturnType>
+            ReturnProxy& Returns(ReturnType returnData);
     };
 
     //Override arguments proxy class for method chaining
@@ -75,12 +75,100 @@ namespace SimpleOverride
                                                             functionProxyType) 
             {}
             
-            template<typename T>
-            ArgumentsProxy& SetArgByAction(std::function<void( const std::vector<void*>& args, 
-                                                                void* currentArg)> setArgsAction);
-            
             template<typename... Args>
             ArgumentsProxy& SetArgs(Args... args);
+            
+            #ifndef SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL
+            #define SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(...) \
+                template<__VA_ARGS__>\
+                ArgumentsProxy& SetArgsByAction(std::function<void( std::vector<void*>& args)> setArgsAction);
+            #endif
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(typename Arg1Type)
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(typename Arg1Type, typename Arg2Type)
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type)
+            
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type,
+                                                        typename Arg11Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type,
+                                                        typename Arg11Type, typename Arg12Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type,
+                                                        typename Arg11Type, typename Arg12Type,
+                                                        typename Arg13Type)
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type,
+                                                        typename Arg11Type, typename Arg12Type,
+                                                        typename Arg13Type, typename Arg14Type);
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type,
+                                                        typename Arg11Type, typename Arg12Type,
+                                                        typename Arg13Type, typename Arg14Type,
+                                                        typename Arg15Type);
+
+            SO_INTERNAL_PROXY_SET_ARGS_BY_ACTION_DECL(  typename Arg1Type, typename Arg2Type, 
+                                                        typename Arg3Type, typename Arg4Type,
+                                                        typename Arg5Type, typename Arg6Type,
+                                                        typename Arg7Type, typename Arg8Type,
+                                                        typename Arg9Type, typename Arg10Type,
+                                                        typename Arg11Type, typename Arg12Type,
+                                                        typename Arg13Type, typename Arg14Type,
+                                                        typename Arg15Type, typename Arg16Type);
     };
 }
 

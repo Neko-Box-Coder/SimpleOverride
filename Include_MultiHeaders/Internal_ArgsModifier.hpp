@@ -7,6 +7,7 @@
 #include "./Any.hpp"
 #include "./NonComparableCopyable.hpp"
 #include "./NonCopyable.hpp"
+#include "Internal_ArgsDataActionInfo.hpp"
 
 #include <cassert>
 #include <vector>
@@ -32,8 +33,8 @@ namespace SimpleOverride
             {
                 if(argsData[index].DataSet)
                 {
-                    INTERNAL_SO_PURE_T& pureArg = const_cast<INTERNAL_SO_PURE_T&>(arg); 
-                    pureArg = *static_cast<INTERNAL_SO_PURE_T*>(argsData[index].Data);
+                    INTERNAL_SO_NON_CONST_T& pureArg = const_cast<INTERNAL_SO_NON_CONST_T&>(arg); 
+                    pureArg = *static_cast<INTERNAL_SO_NON_CONST_T*>(argsData[index].Data);
                     #if SO_LOG_ModifyArgs
                         std::cout << "modified index: "<<index << std::endl;
                         std::cout << "typeid(arg).name(): " << typeid(arg).name() <<std::endl;
@@ -57,8 +58,6 @@ namespace SimpleOverride
                         std::cout << std::endl;
                     #endif
                 }
-                else if(argsData[index].DataActionSet)
-                    argsData[index].DataAction(argumentsList, &const_cast<INTERNAL_SO_PURE_T&>(arg));
 
                 ModifyArgs(argumentsList, argsData, ++index, args...);
             }
@@ -80,8 +79,8 @@ namespace SimpleOverride
 
                 if(argsData[index].DataSet)
                 {
-                    INTERNAL_SO_PURE_T& pureArg = (INTERNAL_SO_PURE_T&)(arg); 
-                    pureArg = *static_cast<INTERNAL_SO_PURE_T*>(argsData[index].Data);
+                    INTERNAL_SO_NON_CONST_T& pureArg = (INTERNAL_SO_NON_CONST_T&)(arg); 
+                    pureArg = *static_cast<INTERNAL_SO_NON_CONST_T*>(argsData[index].Data);
                     #if SO_LOG_ModifyArgs
                         std::cout <<    "argsData[index].DataType: " << 
                                         argsData[index].DataType <<
@@ -98,8 +97,6 @@ namespace SimpleOverride
                         std::cout << std::endl;
                     #endif
                 }
-                else if(argsData[index].DataActionSet)
-                    argsData[index].DataAction(argumentsList, &((INTERNAL_SO_PURE_T&)(arg)));
 
                 ModifyArgs(argumentsList, argsData, ++index, args...);
             }
@@ -164,14 +161,7 @@ namespace SimpleOverride
                     assert(false);
                     exit(1);
                 }
-                else if(argsData[index].DataActionSet)
-                {
-                    std::cout << "[WARNING] DataAction is called on const argument, \
-                                    is this intentional?" << std::endl;
-                    
-                    argsData[index].DataAction(argumentsList, &((INTERNAL_SO_PURE_T&)(arg)));
-                }
-                
+
                 ModifyArgs(argumentsList, argsData, ++index, args...);
             }
 
@@ -186,6 +176,13 @@ namespace SimpleOverride
                     std ::cout <<"Skipping ModifyArgs for index "<<index << " for Any\n";
                 #endif
                 ModifyArgs(argumentsList, argsData, ++index, args...);
+            }
+            
+            inline void ModifyArgs( std::vector<void*>& argumentsList, 
+                                    Internal_ArgsDataActionInfo& argsDataAction)
+            {
+                if(argsDataAction.DataActionSet)
+                    argsDataAction.DataAction(argumentsList);
             }
     };
 }
