@@ -3,9 +3,6 @@
 
 #include "./Any.hpp"
 #include "./ArgsInfo.hpp"
-#include "./NonComparable.hpp"
-#include "./NonComparableCopyable.hpp"
-#include "./NonCopyable.hpp"
 #include "./PureType.hpp"
 #include <vector>
 namespace SimpleOverride
@@ -32,30 +29,6 @@ namespace SimpleOverride
 
                 argumentsList.push_back(curArgInfo);
                 AppendArgsPureTypeInfo(argumentsList, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline void AppendArgsPureTypeInfo( std::vector<ArgInfo>& argumentsList, 
-                                                NonCopyable<T>& arg, 
-                                                Args&... args)
-            {
-                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline void AppendArgsPureTypeInfo( std::vector<ArgInfo>& argumentsList, 
-                                                NonComparable<T>& arg, 
-                                                Args&... args)
-            {
-                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline void AppendArgsPureTypeInfo( std::vector<ArgInfo>& argumentsList, 
-                                                NonComparableCopyable<T>& arg, 
-                                                Args&... args)
-            {
-                AppendArgsPureTypeInfo(argumentsList, (INTERNAL_SO_NON_CONST_T&)arg, args...);
             }
             
             template<   typename T, 

@@ -4,9 +4,6 @@
 #include "./Internal_OverrideArgsDataList.hpp"
 #include "./ProxiesDeclarations.hpp"
 #include "./Any.hpp"
-#include "./NonComparable.hpp"
-#include "./NonCopyable.hpp"
-#include "./NonComparableCopyable.hpp"
 #include "./StaticAssertFalse.hpp"
 #include "./PureType.hpp"
 
@@ -93,33 +90,6 @@ namespace SimpleOverride
                 return SetArgs(proxy, args...);
             }
             
-            template<typename T, typename... Args>
-            inline ArgumentsProxy& SetArgs( ArgumentsProxy& proxy,
-                                            NonComparable<T> arg, Args... args)
-            {
-                return SetArgs(proxy, *arg.ReferenceVar, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline ArgumentsProxy& SetArgs( ArgumentsProxy& proxy,
-                                            NonCopyable<T> arg, Args... args)
-            {
-                static_assert(  SO_ASSERT_FALSE<T>::value, 
-                                "You can't pass non copyable argument to be set");
-                
-                return SetArgs(proxy, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline ArgumentsProxy& SetArgs( ArgumentsProxy& proxy,
-                                            NonComparableCopyable<T> arg, Args... args)
-            {
-                static_assert(  SO_ASSERT_FALSE<T>::value, 
-                                "You can't pass non copyable argument to be set");
-                
-                return SetArgs(proxy, args...);
-            }
-        
             template<typename Arg1Type>
             inline ArgumentsProxy& 
                 SetArgsByAction(ArgumentsProxy& proxy,

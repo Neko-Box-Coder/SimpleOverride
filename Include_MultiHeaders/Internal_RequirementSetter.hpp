@@ -6,9 +6,6 @@
 #include "./Internal_OverrideReturnDataList.hpp"
 #include "./StaticAssertFalse.hpp"
 #include "./Any.hpp"
-#include "./NonComparable.hpp"
-#include "./NonComparableCopyable.hpp"
-#include "./NonCopyable.hpp"
 #include "./PureType.hpp"
 
 #include <cassert>
@@ -71,24 +68,6 @@ namespace SimpleOverride
 
             template<typename DeriveType, typename T, typename... Args>
             inline DeriveType& WhenCalledWith(  CommonProxy<DeriveType>& proxy, 
-                                                NonComparable<T> arg, 
-                                                Args... args)
-            {
-                static_assert(SO_ASSERT_FALSE<T>::value, "You can't check non comparable variable");
-                return *static_cast<DeriveType*>(&proxy);
-            }
-            
-            template<typename DeriveType, typename T, typename... Args>
-            inline DeriveType& WhenCalledWith(  CommonProxy<DeriveType>& proxy, 
-                                                NonComparableCopyable<T> arg, 
-                                                Args... args)
-            {
-                static_assert(SO_ASSERT_FALSE<T>::value, "You can't check non comparable variable");
-                return *static_cast<DeriveType*>(&proxy);
-            }
-
-            template<typename DeriveType, typename T, typename... Args>
-            inline DeriveType& WhenCalledWith(  CommonProxy<DeriveType>& proxy, 
                                                 T arg, 
                                                 Args... args)
             {
@@ -108,45 +87,6 @@ namespace SimpleOverride
                         std::cout << "typeid(T).hash_code(): " << typeid(T).hash_code() << "\n";
                     #endif
                 }
-
-                switch(proxy.FunctionProxyType)
-                {
-                    case ProxyType::RETURN:
-                        OverrideReturnInfos[proxy.FunctionSignatureName].ReturnDatas.back()
-                            .ReturnConditionInfo.ArgsCondition.push_back(curArg);
-                        break;
-                    case ProxyType::ARGS:
-                        OverrideArgumentsInfos[proxy.FunctionSignatureName].ArgumentsDatas.back()
-                            .ArgumentsConditionInfo.ArgsCondition.push_back(curArg);
-                        break;
-                    case ProxyType::COMMON:
-                        std::cout << "[ERROR] This should be checked before calling this" << std::endl;
-                        assert(false);
-                        exit(1);
-                        break;
-                }
-
-                return WhenCalledWith(proxy, args...);
-            }
-            
-            template<typename DeriveType, typename T, typename... Args>
-            inline DeriveType& WhenCalledWith(  CommonProxy<DeriveType>& proxy, 
-                                                NonCopyable<T> arg, 
-                                                Args... args)
-            {
-                ArgInfo curArg;
-                curArg.ArgData = const_cast<INTERNAL_SO_NON_CONST_T*>(arg.ReferenceVar);
-                curArg.CopyConstructor = [](void* data) { return data; };
-                curArg.Destructor = [](void* data){ };
-                curArg.ArgSize = sizeof(T);
-                curArg.ArgTypeHash = typeid(T).hash_code();
-                curArg.ArgSet = true;
-                
-                #if 0
-                    std::cout << "typeid(T).name(): "<<typeid(T).name() <<"\n";
-                    std::cout << "sizeof(T): " << sizeof(T) << "\n";
-                    std::cout << "typeid(T).hash_code(): " << typeid(T).hash_code() << "\n";
-                #endif
 
                 switch(proxy.FunctionProxyType)
                 {

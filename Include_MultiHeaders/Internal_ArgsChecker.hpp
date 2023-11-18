@@ -3,9 +3,6 @@
 
 #include "./Any.hpp"
 #include "./ArgsInfo.hpp"
-#include "./NonComparable.hpp"
-#include "./NonComparableCopyable.hpp"
-#include "./NonCopyable.hpp"
 #include "./PureType.hpp"
 #include <vector>
 #include <iostream>
@@ -113,43 +110,6 @@ namespace SimpleOverride
                 #endif
                 
                 return CheckArguments(validArgumentsList, ++argIndex, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline bool CheckArguments( std::vector<ArgInfo>& validArgumentsList, 
-                                        int argIndex, 
-                                        NonCopyable<T>& arg, 
-                                        Args&... args)
-            {
-                return CheckArguments(validArgumentsList, argIndex, (T&)arg, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline bool CheckArguments( std::vector<ArgInfo>& validArgumentsList, 
-                                        int argIndex, 
-                                        NonComparable<T>& arg, 
-                                        Args&... args)
-            {
-                if(argIndex >= validArgumentsList.size())
-                    return false;
-            
-                return  !validArgumentsList[argIndex].ArgSet ? 
-                        CheckArguments(validArgumentsList, ++argIndex, args...) : 
-                        false;
-            }
-            
-            template<typename T, typename... Args>
-            inline bool CheckArguments( std::vector<ArgInfo>& validArgumentsList, 
-                                        int argIndex, 
-                                        NonComparableCopyable<T>& arg, 
-                                        Args&... args)
-            {
-                if(argIndex >= validArgumentsList.size())
-                    return false;
-
-                return  !validArgumentsList[argIndex].ArgSet ? 
-                        CheckArguments(validArgumentsList, ++argIndex, args...) : 
-                        false;
             }
             
             template<   typename T, 

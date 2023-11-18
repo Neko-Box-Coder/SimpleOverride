@@ -5,10 +5,7 @@
 #include "./Internal_OverrideReturnData.hpp"
 #include "./Internal_OverrideReturnDataList.hpp"
 #include "./ProxiesDeclarations.hpp"
-#include "./NonCopyable.hpp"
 #include "./StaticAssertFalse.hpp"
-#include "./NonComparableCopyable.hpp"
-#include "./NonComparable.hpp"
 #include "./Any.hpp"
 
 #include <iostream>
@@ -67,30 +64,6 @@ namespace SimpleOverride
                 return proxy;
             }
             
-            template<typename T>
-            inline ReturnProxy& Returns(ReturnProxy& proxy, NonComparable<T> returnData)
-            {
-                return Returns(proxy, *returnData.ReferenceVar);
-            }
-            
-            template<typename T>
-            inline ReturnProxy& Returns(ReturnProxy& proxy, NonCopyable<T> returnData)
-            {
-                static_assert(  SO_ASSERT_FALSE<T>::value, 
-                                "You can't pass non copyable value to be returned");
-                
-                return proxy;
-            }
-        
-            template<typename T>
-            inline ReturnProxy& Returns(ReturnProxy& proxy, NonComparableCopyable<T> returnData)
-            {
-                static_assert(  SO_ASSERT_FALSE<T>::value, 
-                                "You can't pass non copyable value to be returned");
-                
-                return proxy;
-            }
-        
         public:
             inline Internal_ReturnDataSetter(ReturnInfosType& overrideReturnInfos) : 
                 OverrideReturnInfos(overrideReturnInfos)

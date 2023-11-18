@@ -65,36 +65,6 @@ inline void FuncWithConstArgsAndArgsToSet(  const int testArg,
                                     testArg3);
 }
 
-inline int FuncWithNonCopyableNonComparableArg( int testArg, 
-                                                    ComplexClass& nonCopyableComparableArg)
-{
-    SO_RETURN_IF_FOUND( OverrideObj, 
-                        FuncWithNonCopyableArg(int, ComplexClass&), 
-                        int, 
-                        testArg, 
-                        (SO_NonComparableCopyable<ComplexClass>&)nonCopyableComparableArg);
-    return -1;
-}
-
-inline int FuncWithNonCopyableArg(int testArg, NonCopyableTestClass& nonCopyableArg)
-{
-    SO_RETURN_IF_FOUND( OverrideObj, 
-                        FuncWithNonCopyableArg(int, NonCopyableTestClass&), 
-                        int, 
-                        testArg, 
-                        (SO_NonCopyable<NonCopyableTestClass>&)nonCopyableArg);
-    
-    return -1;
-}
-
-inline void FuncWithNonComparableArg(int testArg, NonComparableTestClass& nonComparableArg)
-{
-    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    FuncWithNonComparableArg(int, NonComparableTestClass&), 
-                                    testArg, 
-                                    (SO_NonComparable<NonComparableTestClass>&)nonComparableArg);
-}
-
 template<typename T>
 inline int TemplateFunction(T testArg)
 {

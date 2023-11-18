@@ -1,9 +1,6 @@
 #ifndef SO_INTERNAL_ARGS_VALUES_APPENDER_HPP
 #define SO_INTERNAL_ARGS_VALUES_APPENDER_HPP
 
-#include "./NonComparable.hpp"
-#include "./NonComparableCopyable.hpp"
-#include "./NonCopyable.hpp"
 #include "./PureType.hpp"
 #include <vector>
 
@@ -20,33 +17,6 @@ namespace SimpleOverride
 
             template<typename T, typename... Args>
             inline void AppendArgsValues(std::vector<void*>& argumentsList, T& arg, Args&... args)
-            {
-                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
-                AppendArgsValues(argumentsList, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline void AppendArgsValues(   std::vector<void*>& argumentsList, 
-                                            NonCopyable<T>& arg, 
-                                            Args&... args)
-            {
-                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
-                AppendArgsValues(argumentsList, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline void AppendArgsValues(   std::vector<void*>& argumentsList, 
-                                            NonComparable<T>& arg, 
-                                            Args&... args)
-            {
-                argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
-                AppendArgsValues(argumentsList, args...);
-            }
-            
-            template<typename T, typename... Args>
-            inline void AppendArgsValues(   std::vector<void*>& argumentsList, 
-                                            NonComparableCopyable<T>& arg, 
-                                            Args&... args)
             {
                 argumentsList.push_back((INTERNAL_SO_NON_CONST_T*)&arg);
                 AppendArgsValues(argumentsList, args...);
