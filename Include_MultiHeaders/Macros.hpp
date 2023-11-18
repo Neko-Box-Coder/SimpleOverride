@@ -178,11 +178,19 @@ namespace SimpleOverride
     do\
     {\
         returnType returnVal;\
-        if(SO_CHECK_OVERRIDE_AND_RETURN(overrideObjName, returnVal, functionSig, __VA_ARGS__))\
+        if(SO_CHECK_RETURN_OVERRIDE(overrideObjName, returnVal, functionSig, __VA_ARGS__))\
             return returnVal;\
     } while(0)
 
-    #define SO_CHECK_OVERRIDE_AND_RETURN(overrideObjName, returnRef, functionSig, ...)\
+    #define SO_RETURN_REF_IF_FOUND(overrideObjName, functionSig, returnType, ...)\
+    do\
+    {\
+        INTERNAL_SO_PURE_TYPE(returnType)* returnVal;\
+        if(SO_CHECK_RETURN_OVERRIDE(overrideObjName, returnVal, functionSig, __VA_ARGS__))\
+            return *returnVal;\
+    } while(0)
+
+    #define SO_CHECK_RETURN_OVERRIDE(overrideObjName, returnRef, functionSig, ...)\
         overrideObjName.Internal_CheckOverrideAndReturn(returnRef, \
             SO_INTERNAL_FUNC_SIG(functionSig)\
             SO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
@@ -203,16 +211,16 @@ namespace SimpleOverride
     //-------------------------------------------------------
 
     #define SO_MODIFY_ARGS_IF_FOUND(overrideObjName, functionSig, ...)\
-        SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, __VA_ARGS__)
+        SO_CHECK_ARGS_OVERRIDE(overrideObjName, functionSig, __VA_ARGS__)
             
     #define SO_MODIFY_ARGS_AND_RETURN_IF_FOUND(overrideObjName, returnValue, functionSig, ...)\
     do\
     {\
-        if(SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, __VA_ARGS__))\
+        if(SO_CHECK_ARGS_OVERRIDE(overrideObjName, functionSig, __VA_ARGS__))\
             return returnValue;\
     } while(0)
 
-    #define SO_CHECK_OVERRIDE_AND_SET_ARGS(overrideObjName, functionSig, ...)\
+    #define SO_CHECK_ARGS_OVERRIDE(overrideObjName, functionSig, ...)\
             overrideObjName.Internal_CheckOverrideAndSetArgs(   SO_INTERNAL_FUNC_SIG(functionSig)\
                                                                 SO_INTERNAL_APPEND_ARGS(__VA_ARGS__) )
 
@@ -267,24 +275,24 @@ namespace SimpleOverride
     //#if 1
     #ifdef SO_NO_OVERRIDE
         #undef SO_RETURN_IF_FOUND
-        #undef SO_CHECK_OVERRIDE_AND_RETURN
+        #undef SO_CHECK_RETURN_OVERRIDE
         #undef SO_OVERRIDE_RETURNS
         #undef SO_CLEAR_OVERRIDE_RETURNS
         #undef SO_MODIFY_ARGS_IF_FOUND
         #undef SO_MODIFY_ARGS_AND_RETURN_IF_FOUND
-        #undef SO_CHECK_OVERRIDE_AND_SET_ARGS
+        #undef SO_CHECK_ARGS_OVERRIDE
         #undef SO_OVERRIDE_ARGS
         #undef SO_CLEAR_OVERRIDE_ARGS
         #undef SO_DECLARE_INSTNACE
         #undef SO_DECLARE_OVERRIDE_METHODS
     
         #define SO_RETURN_IF_FOUND(...)
-        #define SO_CHECK_OVERRIDE_AND_RETURN(...) SO_CHECK_OVERRIDE_AND_RETURN
+        #define SO_CHECK_RETURN_OVERRIDE(...) SO_CHECK_RETURN_OVERRIDE
         #define SO_OVERRIDE_RETURNS(...)
         #define SO_CLEAR_OVERRIDE_RETURNS(...)
         #define SO_MODIFY_ARGS_IF_FOUND(...)
         #define SO_MODIFY_ARGS_AND_RETURN_IF_FOUND(...)
-        #define SO_CHECK_OVERRIDE_AND_SET_ARGS(...) false
+        #define SO_CHECK_ARGS_OVERRIDE(...) false
         #define SO_OVERRIDE_ARGS(...)
         #define SO_CLEAR_OVERRIDE_ARGS(...)
         #define SO_DECLARE_INSTNACE(...)

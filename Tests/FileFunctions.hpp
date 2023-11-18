@@ -146,4 +146,26 @@ inline void SetTemplateObjectFunc(T& testArg, T* testArg2)
                             testArg2);
 }
 
+static int ReferenceInt = 0;
+
+inline int& ReturnReferenceFunc(int a)
+{
+    SO_RETURN_REF_IF_FOUND( OverrideObj, 
+                            ReturnReferenceFunc(int), 
+                            int&, 
+                            a);
+
+    return ReferenceInt;
+}
+
+inline int* ReturnPointerFunc(int a)
+{
+    SO_RETURN_IF_FOUND( OverrideObj, 
+                        ReturnPointerFunc(int), 
+                        int*, 
+                        a);
+
+    return nullptr;
+}
+
 #endif

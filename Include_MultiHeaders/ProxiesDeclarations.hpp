@@ -62,6 +62,9 @@ namespace SimpleOverride
             
             template<typename ReturnType>
             ReturnProxy& Returns(ReturnType returnData);
+            
+            template<typename ReturnType>
+            ReturnProxy& ReturnsReference(ReturnType& returnData);
     };
 
     //Override arguments proxy class for method chaining

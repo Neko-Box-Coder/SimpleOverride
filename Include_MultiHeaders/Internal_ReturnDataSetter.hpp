@@ -64,6 +64,12 @@ namespace SimpleOverride
                 return proxy;
             }
             
+            template<typename T>
+            inline ReturnProxy& ReturnsReference(ReturnProxy& proxy, T& returnData)
+            {
+                return Returns(proxy, &returnData);
+            }
+            
         public:
             inline Internal_ReturnDataSetter(ReturnInfosType& overrideReturnInfos) : 
                 OverrideReturnInfos(overrideReturnInfos)

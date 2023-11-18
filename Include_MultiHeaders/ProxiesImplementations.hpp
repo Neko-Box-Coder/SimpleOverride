@@ -62,6 +62,12 @@ namespace SimpleOverride
     {
         return SimpleOverrideObj.Returns(*this, returnData);
     }
+    
+    template<typename ReturnType>
+    ReturnProxy& ReturnProxy::ReturnsReference(ReturnType& returnData)
+    {
+        return SimpleOverrideObj.ReturnsReference(*this, returnData);
+    }
 
     template<typename... Args>
     inline ArgumentsProxy& ArgumentsProxy::SetArgs(Args... args)

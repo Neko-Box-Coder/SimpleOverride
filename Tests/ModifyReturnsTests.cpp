@@ -79,6 +79,31 @@ int main()
         ssTEST_OUTPUT_ASSERT(FuncWithoutArgs() == 10);
     };
     
+    ssTEST("Return Reference Test")
+    {
+        int testNum = 1;
+        
+        SO_OVERRIDE_RETURNS (OverrideObj, ReturnReferenceFunc(int))
+                            .ReturnsReference(testNum);
+
+        int& testNum2 = ReturnReferenceFunc(1);
+
+        ssTEST_OUTPUT_ASSERT(testNum == testNum2);
+    };
+    
+    ssTEST("Return Pointer Test")
+    {
+        int testNum = 1;
+        
+        SO_OVERRIDE_RETURNS (OverrideObj, ReturnPointerFunc(int))
+                            .Returns(&testNum);
+
+        int* testNum2 = ReturnPointerFunc(1);
+
+        ssTEST_OUTPUT_ASSERT(&testNum == testNum2);
+    };
+    
     ssTEST_END();
+    
     return 0;
 }
