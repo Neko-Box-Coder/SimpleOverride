@@ -69,6 +69,8 @@ namespace SimpleOverride
                             continue;
                         }
                     }
+                    else
+                        continue;
                     
                     //Check parameter condition types/count match
                     if( !curReturnDatas[i].ReturnConditionInfo.ArgsCondition.empty() && 

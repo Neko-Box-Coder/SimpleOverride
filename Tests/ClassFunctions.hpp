@@ -3,14 +3,6 @@
 
 #include "SimpleOverride.hpp"
 
-//TODO:
-//- Classes with inheritance
-//- Override functions
-//- Overload functions
-//- Functions with const
-//- Functions with templates
-//- Classes with templates
-
 class Shape
 {
     public:

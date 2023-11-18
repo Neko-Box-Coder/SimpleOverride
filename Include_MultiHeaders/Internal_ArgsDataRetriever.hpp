@@ -26,7 +26,7 @@ namespace SimpleOverride
             Internal_ArgsTypesChecker& ArgsTypesChecker;
             Internal_ArgsValuesChecker& ArgsValuesChecker;
             
-            #define SO_LOG_GetCorrectArgumentsDataInfo 1
+            #define SO_LOG_GetCorrectArgumentsDataInfo 0
 
             template<typename... Args>
             inline int GetCorrectArgumentsDataInfo(std::string functionName, Args&... args)
@@ -74,26 +74,19 @@ namespace SimpleOverride
                             {
                                 argumentTypeFailedIndex = j;
                                 
-                                std::cout <<    "argTypeHashes.at(" << j << "): " << 
-                                                argTypeHashes.at(j) << std::endl;
-                                std::cout <<    "deRefArgumentsList[" << j << "].ArgTypeHash: " <<
-                                                deRefArgumentsList[j].ArgTypeHash << std::endl;
-                                
-                                std::cout <<    "typeid(int).hash_code(): " << 
-                                                typeid(int).hash_code() << std::endl;
-                                
-                                std::cout <<    "typeid(float*).hash_code(): " << 
-                                                typeid(float*).hash_code() << std::endl;
-                                
-                                std::cout <<    "typeid(std::string&).hash_code(): " << 
-                                                typeid(std::string&).hash_code() << std::endl;
+                                #if SO_LOG_GetCorrectArgumentsDataInfo
+                                    std::cout <<    "argTypeHashes.at(" << j << "): " << 
+                                                    argTypeHashes.at(j) << std::endl;
+                                    std::cout <<    "deRefArgumentsList[" << j << "].ArgTypeHash: " <<
+                                                    deRefArgumentsList[j].ArgTypeHash << std::endl;
+                                #endif
                                 
                                 break;
                             }
                         }
                     }
                     //Check set argument data counts match
-                    else if(curArgData[i].ArgumentsDataInfo.size() != deRefArgumentsList.size())
+                    else if(curArgData[i].ArgumentsDataInfo.size() == deRefArgumentsList.size())
                     {
                         for(int j = 0; j < curArgData[i].ArgumentsDataInfo.size(); j++)
                         {

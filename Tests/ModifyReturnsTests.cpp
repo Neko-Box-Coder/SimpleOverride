@@ -17,7 +17,7 @@ int main()
     {
         Rectangle rect(1.5, 1.5);
         
-        SO_OVERRIDE_RETURNS (OverrideObj, TestFuncWithoutArgs())
+        SO_OVERRIDE_RETURNS (OverrideObj, FuncWithoutArgs())
                             .Returns(32);
 
         SO_OVERRIDE_RETURNS (rect, GetWidth())
@@ -63,9 +63,20 @@ int main()
                             .Returns(SO_DONT_OVERRIDE_RETURN);
 
         ssTEST_OUTPUT_ASSERT(FuncWithoutArgs() == -1);
-        
+    };
+    
+    ssTEST("Return By Action Test")
+    {
         SO_OVERRIDE_RETURNS (OverrideObj, FuncWithoutArgs())
-                            .Returns(SO_DONT_OVERRIDE_RETURN);
+                            .ReturnsByAction<int>
+                            (
+                                [](const std::vector<void *>& args, void* out)
+                                {
+                                    (*(int*)(out)) = 10;
+                                }
+                            );
+
+        ssTEST_OUTPUT_ASSERT(FuncWithoutArgs() == 10);
     };
     
     ssTEST_END();

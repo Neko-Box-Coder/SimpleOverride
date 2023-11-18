@@ -53,8 +53,8 @@ inline void FuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg
 }
 
 inline void FuncWithConstArgsAndArgsToSet(  const int testArg, 
-                                                const float testArg2, 
-                                                std::string& testArg3)
+                                            const float testArg2, 
+                                            std::string& testArg3)
 {
     SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
                                     FuncWithConstArgsAndArgsToSet(  const int, 
@@ -126,12 +126,13 @@ inline DummyClass ReturnObjectFunc(int data, double value, std::string name)
 
 inline bool SetObjectFunc(int data, double value, std::string name, DummyClass& dummyClass)
 {
-    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    SetObjectFunc(int, double, std::string, DummyClass&), 
-                                    data, 
-                                    value, 
-                                    name, 
-                                    dummyClass);
+    SO_MODIFY_ARGS_AND_RETURN_IF_FOUND( OverrideObj, 
+                                        true,
+                                        SetObjectFunc(int, double, std::string, DummyClass&), 
+                                        data, 
+                                        value, 
+                                        name, 
+                                        dummyClass);
 
     SO_RETURN_IF_FOUND( OverrideObj,
                         SetObjectFunc(int, double, std::string, DummyClass&),
@@ -166,5 +167,13 @@ inline T ReturnTemplateObjectFunc(T testArg)
     return testArg;
 }
 
+template<typename T>
+inline void SetTemplateObjectFunc(T& testArg, T* testArg2)
+{
+    SO_MODIFY_ARGS_IF_FOUND(OverrideObj, 
+                            SetTemplateObjectFunc(T&, T*),
+                            testArg,
+                            testArg2);
+}
 
 #endif
