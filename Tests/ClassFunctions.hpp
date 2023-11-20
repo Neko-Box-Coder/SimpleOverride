@@ -6,8 +6,8 @@
 class Shape
 {
     public:
-        virtual float GetArea() const = 0;
-        virtual float GetPerimeter() const = 0;
+        virtual float GetArea(float multiplier = 1.f) const = 0;
+        virtual float GetPerimeter(float multiplier = 1.f) const = 0;
 };
 
 class Rectangle : public Shape
@@ -35,72 +35,76 @@ class Rectangle : public Shape
         
         inline virtual void SetWidth(float width)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetWidth(float), 
-                                            width);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetWidth(float), 
+                                    width);
 
             Width = width;
         }
         
         inline virtual void SetWidth(int width)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetWidth(int), 
-                                            width);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetWidth(int), 
+                                    width);
 
             Width = width;
         }
         
-        inline virtual float GetWidth() const
+        inline virtual float GetWidth(float multiplier = 1.f) const
         {
             SO_RETURN_IF_FOUND( Overrider, 
-                                GetWidth(), 
-                                float);
+                                GetWidth(float), 
+                                float,
+                                multiplier);
 
-            return Width;
+            return Width * multiplier;
         }
         
         inline virtual void SetHeight(float height)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetHeight(float), 
-                                            height);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetHeight(float), 
+                                    height);
             
             Height = height;
         }
         
         inline virtual void SetHeight(int height)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetHeight(int), 
-                                            height);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetHeight(int), 
+                                    height);
             
             Height = height;
         }
         
-        inline virtual float GetHeight() const
+        inline virtual float GetHeight(float multiplier = 1.f) const
         {
             SO_RETURN_IF_FOUND( Overrider, 
-                                GetHeight(), 
-                                float);
+                                GetHeight(float), 
+                                float,
+                                multiplier);
             
-            return Height;
+            return Height * multiplier;
         }
         
-        inline virtual float GetArea() const override
+        inline virtual float GetArea(float multiplier = 1.f) const override
         {
             SO_RETURN_IF_FOUND( Overrider, 
-                                GetArea(), 
-                                float);
+                                GetArea(float), 
+                                float,
+                                multiplier);
             
             return Width * Height;
         }
         
-        inline virtual float GetPerimeter() const override
+        inline virtual float GetPerimeter(float multiplier = 1.f) const override
         {
             SO_RETURN_IF_FOUND( Overrider, 
-                                GetPerimeter(), 
-                                float);
+                                GetPerimeter(float), 
+                                float,
+                                multiplier);
             
             return 2.f * (Width + Height);
         }
@@ -132,9 +136,9 @@ class Square : public Rectangle
         
         inline virtual void SetSize(float size)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetSize(float), 
-                                            size);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetSize(float), 
+                                    size);
             
             Rectangle::SetWidth(size);
             Rectangle::SetHeight(size);
@@ -142,28 +146,29 @@ class Square : public Rectangle
         
         inline virtual void SetSize(int size)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetSize(int), 
-                                            size);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetSize(int), 
+                                    size);
             
             Rectangle::SetWidth(size);
             Rectangle::SetHeight(size);
         }
         
-        inline virtual float GetSize() const
+        inline virtual float GetSize(float multiplier = 1.f) const
         {
             SO_RETURN_IF_FOUND( Overrider, 
-                                GetSize(), 
-                                float);
+                                GetSize(float), 
+                                float,
+                                multiplier);
             
-            return Rectangle::GetWidth();
+            return Rectangle::GetWidth(multiplier);
         }
         
         void SetMetaData(T metaData)
         {
-            SO_MODIFY_ARGS_IF_FOUND(   Overrider, 
-                                            SetMetaData(T), 
-                                            metaData);
+            SO_MODIFY_ARGS_IF_FOUND(Overrider, 
+                                    SetMetaData(T), 
+                                    metaData);
             
             MetaData = metaData;
         }

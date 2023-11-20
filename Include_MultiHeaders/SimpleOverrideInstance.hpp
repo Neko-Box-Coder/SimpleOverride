@@ -84,8 +84,8 @@ namespace SimpleOverride
                             
                             if(curArgDataInfo.ArgSet)
                             {
-                                curArgDataInfo.ArgData = 
-                                    curArgDataInfo.CopyConstructor(curArgDataInfo.ArgData);
+                                curArgDataInfo.ArgDataPointer = 
+                                    curArgDataInfo.CopyConstructor(curArgDataInfo.ArgDataPointer);
                             }
                         }
                     }
@@ -122,8 +122,8 @@ namespace SimpleOverride
                             
                             if(curArgDataInfo.ArgSet)
                             {
-                                curArgDataInfo.ArgData = 
-                                    curArgDataInfo.CopyConstructor(curArgDataInfo.ArgData);
+                                curArgDataInfo.ArgDataPointer = 
+                                    curArgDataInfo.CopyConstructor(curArgDataInfo.ArgDataPointer);
                             }
                         }
                     }
@@ -170,7 +170,7 @@ namespace SimpleOverride
                                                         .ArgsCondition[j];
                             
                             if(curArgInfos.ArgSet)
-                                curArgInfos.Destructor(curArgInfos.ArgData);
+                                curArgInfos.Destructor(curArgInfos.ArgDataPointer);
                         }
                     }
                 }
@@ -202,7 +202,7 @@ namespace SimpleOverride
                                                     .ArgsCondition[j];
                             
                             if(curArgInfo.ArgSet)
-                                curArgInfo.Destructor(curArgInfo.ArgData);
+                                curArgInfo.Destructor(curArgInfo.ArgDataPointer);
                         }
                     }
                 }

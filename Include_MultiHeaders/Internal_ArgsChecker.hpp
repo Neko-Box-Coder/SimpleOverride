@@ -70,7 +70,7 @@ namespace SimpleOverride
                     }
 
                     if(arg != *reinterpret_cast<INTERNAL_SO_NON_CONST_T*>
-                                (validArgumentsList[argIndex].ArgData))
+                                (validArgumentsList[argIndex].ArgDataPointer))
                     {
                         #if SO_LOG_CheckArguments
                             std::cout << 

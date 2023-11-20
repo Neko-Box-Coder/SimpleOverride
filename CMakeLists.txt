@@ -38,8 +38,12 @@ if(SIMPLE_OVERRIDE_BUILD_TEST)
     #add_executable(SimpleOverrideTest "${CMAKE_CURRENT_LIST_DIR}/Tests/SimpleOverrideTests.cpp")
     add_executable(ModifyReturnsTests "${CMAKE_CURRENT_LIST_DIR}/Tests/ModifyReturnsTests.cpp")
     target_link_libraries(ModifyReturnsTests PUBLIC SimpleOverride ssTest)
+    
     add_executable(ModifyArgsTests "${CMAKE_CURRENT_LIST_DIR}/Tests/ModifyArgsTests.cpp")
     target_link_libraries(ModifyArgsTests PUBLIC SimpleOverride ssTest)
+    
+    add_executable(WhenCalledWithTests "${CMAKE_CURRENT_LIST_DIR}/Tests/WhenCalledWithTests.cpp")
+    target_link_libraries(WhenCalledWithTests PUBLIC SimpleOverride ssTest)
 
 endif()
 

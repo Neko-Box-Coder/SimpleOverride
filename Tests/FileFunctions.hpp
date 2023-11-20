@@ -45,24 +45,24 @@ inline void* FuncWIthVoidPointer(int testArg, void* testArg2)
 
 inline void FuncWithArgsToSet(int testArg, float* testArg2, std::string& testArg3)
 {
-    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    FuncWithArgsToSet(int, float*, std::string&), 
-                                    testArg, 
-                                    testArg2, 
-                                    testArg3);
+    SO_MODIFY_ARGS_IF_FOUND(OverrideObj, 
+                            FuncWithArgsToSet(int, float*, std::string&), 
+                            testArg, 
+                            testArg2, 
+                            testArg3);
 }
 
 inline void FuncWithConstArgsAndArgsToSet(  const int testArg, 
                                             const float testArg2, 
                                             std::string& testArg3)
 {
-    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    FuncWithConstArgsAndArgsToSet(  const int, 
-                                                                        const float, 
-                                                                        std::string&), 
-                                    testArg, 
-                                    testArg2, 
-                                    testArg3);
+    SO_MODIFY_ARGS_IF_FOUND(OverrideObj, 
+                            FuncWithConstArgsAndArgsToSet(  const int, 
+                            const float, 
+                            std::string&), 
+                            testArg, 
+                            testArg2, 
+                            testArg3);
 }
 
 template<typename T>
@@ -78,11 +78,11 @@ inline int TemplateFunction(T testArg)
 
 inline DummyClass ReturnObjectFunc(int data, double value, std::string name)
 {
-    SO_MODIFY_ARGS_IF_FOUND(   OverrideObj, 
-                                    ReturnObjectFunc(int, double, std::string), 
-                                    data,
-                                    value,
-                                    name);
+    SO_MODIFY_ARGS_IF_FOUND(OverrideObj, 
+                            ReturnObjectFunc(int, double, std::string), 
+                            data,
+                            value,
+                            name);
     
     SO_RETURN_IF_FOUND( OverrideObj,
                         ReturnObjectFunc(int, double, std::string),
@@ -116,6 +116,15 @@ inline bool SetObjectFunc(int data, double value, std::string name, DummyClass& 
     return true;
 }
 
+inline int ConstStringRefArgFunc(const std::string& test)
+{
+    SO_RETURN_IF_FOUND( OverrideObj, 
+                        ConstStringRefArgFunc(const std::string&), 
+                        int, 
+                        test);
+    return -1;
+}
+
 inline std::string ReturnStringFunc(int value)
 {
     SO_RETURN_IF_FOUND( OverrideObj, 
@@ -133,7 +142,26 @@ inline T ReturnTemplateObjectFunc(T testArg)
                         ReturnTemplateObjectFunc(T), 
                         T, 
                         testArg);
-    
+
+    #if 0
+    do {
+      constexpr bool isFundamental = std::is_fundamental<T>::value;
+      constexpr bool checkSuccess = isFundamental ? 
+                                    true :
+                                    std::is_default_constructible<T>::value &&
+                                    std::is_copy_constructible<T>::value;
+      static_assert(checkSuccess, "Test");
+      
+      T returnVal;
+      if (OverrideObj.Internal_CheckOverrideAndReturn(
+              returnVal,
+              SimpleOverride ::Internal_ProcessFunctionSig(
+                  "ReturnTemplateObjectFunc(T)"),
+              testArg))
+        return returnVal;
+    } while (0);
+    #endif
+
     return testArg;
 }
 

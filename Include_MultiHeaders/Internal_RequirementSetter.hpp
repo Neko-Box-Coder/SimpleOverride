@@ -74,7 +74,7 @@ namespace SimpleOverride
                 ArgInfo curArg;
                 if(!std::is_same<T, Any>())
                 {
-                    curArg.ArgData = new T(arg);
+                    curArg.ArgDataPointer = new T(arg);
                     curArg.CopyConstructor = [](void* data) { return new T(*static_cast<T*>(data)); };
                     curArg.Destructor = [](void* data){ delete static_cast<T*>(data); };
                     curArg.ArgSize = sizeof(T);

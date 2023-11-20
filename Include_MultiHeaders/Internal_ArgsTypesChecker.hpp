@@ -20,6 +20,7 @@ namespace SimpleOverride
 
             #define SO_LOG_CheckArguments 0
 
+            //Check Value or reference
             template<typename T, typename... Args>
             inline bool CheckArgumentsTypes(std::vector<ArgInfo>& validArgumentsList, 
                                             int argIndex, 
@@ -27,6 +28,7 @@ namespace SimpleOverride
                                             Args&... args)
             {
                 #if SO_LOG_CheckArguments
+                    std::cout << "Line: " << __LINE__ << std::endl;
                     std::cout <<"CheckArgumentsTypes index: "<<argIndex<<"\n";
                 #endif
             
@@ -35,7 +37,51 @@ namespace SimpleOverride
 
                 if(validArgumentsList[argIndex].ArgSet)
                 {
-                    if(sizeof(INTERNAL_SO_NON_CONST_T) != validArgumentsList[argIndex].ArgSize)
+                    if( sizeof(INTERNAL_SO_NON_CONST_T) != validArgumentsList[argIndex].ArgSize &&
+                        sizeof(INTERNAL_SO_NON_CONST_T*) != validArgumentsList[argIndex].ArgSize)
+                    {
+                        return false;
+                    }
+
+                    if( typeid(INTERNAL_SO_NON_CONST_T).hash_code() != 
+                            validArgumentsList[argIndex].ArgTypeHash &&
+                        typeid(INTERNAL_SO_NON_CONST_T*).hash_code() != 
+                            validArgumentsList[argIndex].ArgTypeHash)
+                    {
+                        return false;
+                    }
+                }
+                
+                #if SO_LOG_CheckArguments
+                    std::cout << "Line: " << __LINE__ << std::endl;
+                    std::cout <<"CheckArgumentsTypes index: "<<argIndex<<" passed\n";
+                #endif
+                
+                return CheckArgumentsTypes(validArgumentsList, ++argIndex, args...);
+            }
+            
+            //Check Pointer or value
+            template<   typename T, 
+                        typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
+                        //typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
+                        typename... Args>
+            inline bool CheckArgumentsTypes(std::vector<ArgInfo>& validArgumentsList, 
+                                            int argIndex, 
+                                            T*& arg, 
+                                            Args&... args)
+            {
+                #if SO_LOG_CheckArguments
+                    std::cout << "Line: " << __LINE__ << std::endl;
+                    std::cout <<"CheckArgumentsTypes index: "<<argIndex<<"\n";
+                #endif
+            
+                if(argIndex >= validArgumentsList.size())
+                    return false;
+
+                if(validArgumentsList[argIndex].ArgSet)
+                {
+                    if( sizeof(INTERNAL_SO_NON_CONST_T*) != validArgumentsList[argIndex].ArgSize &&
+                        sizeof(INTERNAL_SO_NON_CONST_T) != validArgumentsList[argIndex].ArgSize)
                     {
                         #if SO_LOG_CheckArguments
                             std::cout <<    "sizeof(INTERNAL_SO_NON_CONST_T): " <<
@@ -52,7 +98,9 @@ namespace SimpleOverride
                         return false;
                     }
 
-                    if(typeid(INTERNAL_SO_NON_CONST_T).hash_code() != 
+                    if( typeid(INTERNAL_SO_NON_CONST_T*).hash_code() != 
+                            validArgumentsList[argIndex].ArgTypeHash &&
+                        typeid(INTERNAL_SO_NON_CONST_T).hash_code() != 
                             validArgumentsList[argIndex].ArgTypeHash)
                     {
                         #if SO_LOG_CheckArguments
@@ -71,45 +119,11 @@ namespace SimpleOverride
                 }
                 
                 #if SO_LOG_CheckArguments
+                    std::cout << "Line: " << __LINE__ << std::endl;
                     std::cout <<"CheckArgumentsTypes index: "<<argIndex<<" passed\n";
                 #endif
                 
                 return CheckArgumentsTypes(validArgumentsList, ++argIndex, args...);
-            }
-            
-            template<typename... Args>
-            inline bool CheckArgumentsTypes(std::vector<ArgInfo>& validArgumentsList, 
-                                            int argIndex, 
-                                            Any& arg, 
-                                            Args&... args)
-            {
-                #if SO_LOG_CheckArguments
-                    std::cout <<"CheckArgumentsTypes index: "<<argIndex<<"\n";
-                #endif
-            
-                if(argIndex >= validArgumentsList.size())
-                    return false;
-
-                if(validArgumentsList[argIndex].ArgSet)
-                    return false;
-                
-                #if SO_LOG_CheckArguments
-                    std::cout <<"CheckArgumentsTypes index: "<<argIndex<<" passed\n";
-                #endif
-                
-                return CheckArgumentsTypes(validArgumentsList, ++argIndex, args...);
-            }
-            
-            template<   typename T, 
-                        typename = typename std::enable_if<!std::is_same<T, void>::value>::type, 
-                        typename = typename std::enable_if<!std::is_same<T, const void>::value>::type, 
-                        typename... Args>
-            inline bool CheckArgumentsTypes(std::vector<ArgInfo>& validArgumentsList, 
-                                            int argIndex, 
-                                            T*& arg, 
-                                            Args&... args)
-            {
-                return CheckArgumentsTypes(validArgumentsList, argIndex, *arg, args...);
             }
             
             template<typename T, typename... Args>

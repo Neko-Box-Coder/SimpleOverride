@@ -126,7 +126,7 @@ namespace SimpleOverride
                                                                 args...))
                     {
                         #if SO_LOG_GetCorrectArgumentsDataInfo
-                            std::cout << "Failed at Check parameter\n";
+                            std::cout << "Failed at Check parameter type\n";
                         #endif
                         continue;
                     }
@@ -139,7 +139,7 @@ namespace SimpleOverride
                                                                 args...))
                     {
                         #if SO_LOG_GetCorrectArgumentsDataInfo
-                            std::cout << "Failed at Check parameter\n";
+                            std::cout << "Failed at Check parameter value\n";
                         #endif
                         
                         if(curArgData[i].ArgumentsActionInfo.OtherwiseActionSet)

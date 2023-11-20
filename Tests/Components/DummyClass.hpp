@@ -14,11 +14,10 @@ class DummyClass {
         DummyClass() : data(0), value(0.0), name("") { }
         DummyClass(int d, double v, std::string n) : data(d), value(v), name(n) {}
 
-        // Copy constructor
-        DummyClass(const DummyClass& other) :   data(other.data), 
-                                                value(other.value), 
-                                                name(other.name)
-        {}
+        DummyClass(const DummyClass& other)
+        {
+            *this = other;
+        }
 
         // Comparison operator
         inline bool operator==(const DummyClass& other) const 
@@ -28,9 +27,17 @@ class DummyClass {
         
         inline bool operator!=(const DummyClass& other) const
         {
-            return DummyClass::operator==(other);
+            return !DummyClass::operator==(other);
         }
-
+        
+        inline DummyClass& operator=(const DummyClass& other) 
+        {
+            data = other.data;
+            value = other.value;
+            name = other.name;
+            return *this;
+        }
+        
         inline void SetData(int d)
         {
             data = d;
@@ -69,6 +76,17 @@ class TemplateDummy : public DummyClass
         T GenericData;
     
     public:
+        inline TemplateDummy() :   
+            DummyClass(),
+            GenericData()
+        {}
+        
+        //Copy constructor using assignment operator
+        inline TemplateDummy(const TemplateDummy<T>& other)
+        {
+            *this = other;
+        }
+        
         inline TemplateDummy(T genericData, int d, double v, std::string n) :   
             DummyClass(d, v, n),
             GenericData(genericData)
@@ -77,11 +95,24 @@ class TemplateDummy : public DummyClass
         inline TemplateDummy(T genericData) :   DummyClass(),
                                                 GenericData(genericData)
         {}
+        
+        //Assignment operator
+        inline TemplateDummy<T>& operator=(const TemplateDummy<T>& other)
+        {
+            DummyClass::operator=(other);
+            GenericData = other.GenericData;
+            return *this;
+        }
 
         inline bool operator ==(const TemplateDummy<T>& other) const
         {
             return  DummyClass::operator==(other) && 
                     GenericData == other.GenericData;
+        }
+        
+        inline bool operator!=(const TemplateDummy<T>& other) const
+        {
+            return !TemplateDummy<T>::operator==(other);
         }
         
         inline void SetGenericData(T genericData)

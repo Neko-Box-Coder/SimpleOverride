@@ -20,7 +20,7 @@ int main()
         SO_OVERRIDE_RETURNS (OverrideObj, FuncWithoutArgs())
                             .Returns(32);
 
-        SO_OVERRIDE_RETURNS (rect, GetWidth())
+        SO_OVERRIDE_RETURNS (rect, GetWidth(float))
                             .Returns(5.f);
         
         ssTEST_OUTPUT_ASSERT("int", FuncWithoutArgs() == 32);
