@@ -1,5 +1,11 @@
 ## Simple Override
 
+---
+
+> #### This Has Been Superceeded By [CppOverride](https://github.com/Neko-Box-Coder/CppOverride)
+
+---
+
 A simple framework for overriding function behaviours.
 
 This allows overriding return value or setting arguments, similar to mocking but more flexible
