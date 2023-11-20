@@ -33,8 +33,6 @@ int main()
 
         SetObjectFunc(10, 20.0, "test10", testObject);
         
-        std::cout << "test print" << std::endl;
-        
         ssTEST_OUTPUT_ASSERT(testObject == assignObject);
     };
     

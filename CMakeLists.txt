@@ -44,6 +44,18 @@ if(SIMPLE_OVERRIDE_BUILD_TEST)
     
     add_executable(WhenCalledWithTests "${CMAKE_CURRENT_LIST_DIR}/Tests/WhenCalledWithTests.cpp")
     target_link_libraries(WhenCalledWithTests PUBLIC SimpleOverride ssTest)
+    
+    add_executable(TimesTests "${CMAKE_CURRENT_LIST_DIR}/Tests/TimesTests.cpp")
+    target_link_libraries(TimesTests PUBLIC SimpleOverride ssTest)
+    
+    add_executable(IfTests "${CMAKE_CURRENT_LIST_DIR}/Tests/IfTests.cpp")
+    target_link_libraries(IfTests PUBLIC SimpleOverride ssTest)
+    
+    add_executable(Otherwise_DoTests "${CMAKE_CURRENT_LIST_DIR}/Tests/Otherwise_DoTests.cpp")
+    target_link_libraries(Otherwise_DoTests PUBLIC SimpleOverride ssTest)
+    
+    add_executable(WhenCalledExpectedly_DoTests "${CMAKE_CURRENT_LIST_DIR}/Tests/WhenCalledExpectedly_DoTests.cpp")
+    target_link_libraries(WhenCalledExpectedly_DoTests PUBLIC SimpleOverride ssTest)
 
 endif()
 
